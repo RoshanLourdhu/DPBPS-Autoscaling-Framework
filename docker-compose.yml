@@ -1,0 +1,166 @@
+# docker-compose.yml
+# Kubernetes‑ready Docker Compose configuration for Phase 4A.
+# All backend services share the same SQLite volume (sqlite_data) for legacy mode.
+# When DB_BACKEND=postgres, services connect to the postgres service.
+
+version: "3.9"
+
+services:
+  product-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_MODULE: backend.services.product_service.main:app
+    # ports removed for safe scaling (host port omitted)
+    environment:
+      - DB_BACKEND=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=dpbps
+      - POSTGRES_USER=dpbps_user
+      - POSTGRES_PASSWORD=dpbps_pass
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_MODULE: backend.services.cart_service.main:app
+    # ports removed for safe scaling (host port omitted)
+    environment:
+      - DB_BACKEND=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=dpbps
+      - POSTGRES_USER=dpbps_user
+      - POSTGRES_PASSWORD=dpbps_pass
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  checkout-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_MODULE: backend.services.checkout_service.main:app
+    # ports removed for safe scaling (host port omitted)
+    environment:
+      - DB_BACKEND=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=dpbps
+      - POSTGRES_USER=dpbps_user
+      - POSTGRES_PASSWORD=dpbps_pass
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  recommendation-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_MODULE: backend.services.recommendation_service.main:app
+    # ports removed for safe scaling (host port omitted)
+    environment:
+      - DB_BACKEND=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=dpbps
+      - POSTGRES_USER=dpbps_user
+      - POSTGRES_PASSWORD=dpbps_pass
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  orchestration-api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_MODULE: backend.app.main:app
+    ports: ["8000:8000"]
+    environment:
+      - DB_BACKEND=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=dpbps
+      - POSTGRES_USER=dpbps_user
+      - POSTGRES_PASSWORD=dpbps_pass
+      - PRODUCT_SERVICE_URL=http://product-service:8000
+      - CART_SERVICE_URL=http://cart-service:8000
+      - CHECKOUT_SERVICE_URL=http://checkout-service:8000
+      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:8000
+      - SIMULATION_TARGET_BASE_URL=http://orchestration-api:8000
+    depends_on:
+      product-service:
+        condition: service_healthy
+      cart-service:
+        condition: service_healthy
+      checkout-service:
+        condition: service_healthy
+      recommendation-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports: ["8080:80"]
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      orchestration-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=dpbps
+      - POSTGRES_USER=dpbps_user
+      - POSTGRES_PASSWORD=dpbps_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "dpbps_user"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  sqlite_data:
+  postgres_data:
+

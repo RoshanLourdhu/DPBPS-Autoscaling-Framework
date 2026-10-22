@@ -1,0 +1,10 @@
+{
+  "experiment_id": "2026-10-22T10-45-39_68b6cb85de1a4b578930d6aea10b9fb6",
+  "profile": "normal_operation",
+  "approach": "fixed",
+  "duration_seconds": 60,
+  "request_rate": 5,
+  "initial_replicas": 2,
+  "repetitions": 1,
+  "timestamp_utc": "2026-10-22T10:45:39.364340"
+}

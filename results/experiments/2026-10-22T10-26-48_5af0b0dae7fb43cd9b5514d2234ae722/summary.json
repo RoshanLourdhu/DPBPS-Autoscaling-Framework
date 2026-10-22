@@ -1,0 +1,7 @@
+{
+  "experiment_id": "2026-10-22T10-26-48_5af0b0dae7fb43cd9b5514d2234ae722",
+  "classification": "real_http_load_test",
+  "config_path": "C:\\Users\\ROSHAN\\Downloads\\CIS\\Deployment Aware AAutoscaling Platform\\results\\experiments\\2026-10-22T10-26-48_5af0b0dae7fb43cd9b5514d2234ae722\\config.json",
+  "readiness_path": "C:\\Users\\ROSHAN\\Downloads\\CIS\\Deployment Aware AAutoscaling Platform\\results\\experiments\\2026-10-22T10-26-48_5af0b0dae7fb43cd9b5514d2234ae722\\readiness.json",
+  "timestamp_utc": "2026-10-22T10:27:51.590145"
+}

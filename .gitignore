@@ -1,0 +1,27 @@
+# .gitignore
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+# Virtual env
+venv/
+ENV/
+env/
+# Poetry
+poetry.lock
+# Test cache
+.pytest_cache/
+# IDE / editor
+.vscode/
+.idea/
+# Environment files
+.env
+.env.*
+# Node
+node_modules/
+# Build artifacts
+build/
+dist/
+# Misc
+.DS_Store

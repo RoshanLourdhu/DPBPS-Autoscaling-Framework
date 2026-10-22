@@ -1,0 +1,30 @@
+{
+  "orchestration-api": {
+    "healthy": true,
+    "reason": "ok"
+  },
+  "product-service": {
+    "healthy": true,
+    "reason": "ok"
+  },
+  "cart-service": {
+    "healthy": true,
+    "reason": "ok"
+  },
+  "checkout-service": {
+    "healthy": true,
+    "reason": "ok"
+  },
+  "recommendation-service": {
+    "healthy": true,
+    "reason": "ok"
+  },
+  "frontend": {
+    "healthy": true,
+    "reason": "ok"
+  },
+  "postgres": {
+    "healthy": true,
+    "reason": "ok"
+  }
+}

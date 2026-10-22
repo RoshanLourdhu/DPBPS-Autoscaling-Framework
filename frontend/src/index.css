@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0e21; /* dark navy */
+  --text: #d1d5db; /* light gray */
+  --accent: #0ea5e9; /* cyan */
+  --accent-blue: #1e40af; /* refined blue */
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
