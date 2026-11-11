@@ -1,0 +1,157 @@
+{
+  "experiment_id": "exp_20261110T170244_sudden_traffic_spike_d80c4694",
+  "profile_name": "SUDDEN_TRAFFIC_SPIKE",
+  "target_users": 80,
+  "target_duration_seconds": 120,
+  "actual_duration_seconds": 130.0,
+  "average_frontend_rps": 35.7,
+  "peak_frontend_rps": 83.57,
+  "average_frontend_p95_ms": 808.61,
+  "max_frontend_p95_ms": 2044.8,
+  "observations": [
+    {
+      "timestamp": "2026-11-10T17:02:46.860959+00:00",
+      "elapsed_seconds": 0.0,
+      "stage": "Baseline (5u)",
+      "frontend_rps": 0.35734323387892863,
+      "frontend_p95_ms": 4.75,
+      "productcatalog_rps": 0.4000577865692995,
+      "cartservice_rps": 0.0,
+      "cartservice_p95_ms": 0.0,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:02:56.509485+00:00",
+      "elapsed_seconds": 10.0,
+      "stage": "Baseline (5u)",
+      "frontend_rps": 0.4000335842858512,
+      "frontend_p95_ms": 4.75,
+      "productcatalog_rps": 0.4445071698341067,
+      "cartservice_rps": 0.022224197706462796,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:03:06.396657+00:00",
+      "elapsed_seconds": 20.0,
+      "stage": "Baseline (5u)",
+      "frontend_rps": 1.644577297065932,
+      "frontend_p95_ms": 235.0000357170637,
+      "productcatalog_rps": 5.8671422672309905,
+      "cartservice_rps": 0.666717041580705,
+      "cartservice_p95_ms": 4.749999999999999,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:03:16.543164+00:00",
+      "elapsed_seconds": 30.0,
+      "stage": "Spike Peak (80u)",
+      "frontend_rps": 1.6895570065832521,
+      "frontend_p95_ms": 235.09213020979047,
+      "productcatalog_rps": 6.303562430547762,
+      "cartservice_rps": 0.7330948602938256,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:03:26.666639+00:00",
+      "elapsed_seconds": 40.0,
+      "stage": "Spike Peak (80u)",
+      "frontend_rps": 3.422852462946583,
+      "frontend_p95_ms": 221.0714571481914,
+      "productcatalog_rps": 11.645622342783398,
+      "cartservice_rps": 1.2223358154200106,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:03:36.530482+00:00",
+      "elapsed_seconds": 50.0,
+      "stage": "Spike Peak (80u)",
+      "frontend_rps": 17.334758153044277,
+      "frontend_p95_ms": 1980.4449987271018,
+      "productcatalog_rps": 75.60336014933998,
+      "cartservice_rps": 9.933935843558654,
+      "cartservice_p95_ms": 4.749999999999999,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:03:46.617213+00:00",
+      "elapsed_seconds": 60.0,
+      "stage": "Spike Peak (80u)",
+      "frontend_rps": 22.61625512902946,
+      "frontend_p95_ms": 2044.8006055726783,
+      "productcatalog_rps": 149.30195339372813,
+      "cartservice_rps": 10.325015581225028,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:03:56.498162+00:00",
+      "elapsed_seconds": 70.0,
+      "stage": "Spike Peak (80u)",
+      "frontend_rps": 45.41388173434797,
+      "frontend_p95_ms": 1833.4501152931343,
+      "productcatalog_rps": 216.37693201477893,
+      "cartservice_rps": 22.601555673688615,
+      "cartservice_p95_ms": 4.75935958562319,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:04:06.520123+00:00",
+      "elapsed_seconds": 80.0,
+      "stage": "Spike Peak (80u)",
+      "frontend_rps": 71.55948269345636,
+      "frontend_p95_ms": 1408.40984095076,
+      "productcatalog_rps": 352.81149523270784,
+      "cartservice_rps": 35.11299223842058,
+      "cartservice_p95_ms": 4.756020290788737,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:04:16.546199+00:00",
+      "elapsed_seconds": 90.0,
+      "stage": "Recovery (5u)",
+      "frontend_rps": 73.5501886754711,
+      "frontend_p95_ms": 1473.4371191683977,
+      "productcatalog_rps": 363.9053147979371,
+      "cartservice_rps": 34.906754598602454,
+      "cartservice_p95_ms": 4.756700986330589,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:04:26.497998+00:00",
+      "elapsed_seconds": 100.0,
+      "stage": "Recovery (5u)",
+      "frontend_rps": 83.56560142247484,
+      "frontend_p95_ms": 588.8706546590287,
+      "productcatalog_rps": 434.0482275808423,
+      "cartservice_rps": 39.3812684770038,
+      "cartservice_p95_ms": 4.755367232986242,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:04:36.462733+00:00",
+      "elapsed_seconds": 110.0,
+      "stage": "Recovery (5u)",
+      "frontend_rps": 75.8326913362837,
+      "frontend_p95_ms": 238.84072661831962,
+      "productcatalog_rps": 399.84420224515554,
+      "cartservice_rps": 35.80322648122708,
+      "cartservice_p95_ms": 4.749999999999999,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:04:46.533062+00:00",
+      "elapsed_seconds": 120.0,
+      "stage": "Concluded",
+      "frontend_rps": 66.77062288622243,
+      "frontend_p95_ms": 242.9481479409936,
+      "productcatalog_rps": 356.3858790586039,
+      "cartservice_rps": 31.878153935218176,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    }
+  ],
+  "locust_tail_logs": "GET      /product/1YMWWN1N4O                                                               77     0(0.00%) |    134      15    1078     72 |    0.10        0.00\nGET      /product/2ZYFJ3GM2N                                                               67     0(0.00%) |     92      16    1080     41 |    0.00        0.00\nGET      /product/66VCHSJNUP                                                               70     0(0.00%) |     87      15     709     39 |    0.30        0.00\nGET      /product/6E92ZMYYFZ                                                               61     0(0.00%) |     87      15     595     44 |    0.10        0.00\nGET      /product/9SIQT8TOJO                                                               61     0(0.00%) |    159      15     946     85 |    0.00        0.00\nGET      /product/L9ECAV7KIM                                                               78     0(0.00%) |    143      15     888     48 |    0.00        0.00\nGET      /product/LS4PSXUNUM                                                               64     0(0.00%) |    102      16     708     68 |    0.10        0.00\nGET      /product/OLJCESPC7Z                                                               67     0(0.00%) |    114      15    1072     58 |    0.00        0.00\nPOST     /setCurrency                                                                      79     0(0.00%) |    230      24    1097    120 |    0.00        0.00\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\n         Aggregated                                                                      1175     1(0.09%) |    200      13    1419     86 |    1.30        0.00\n\nType     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\nGET      /                                                                                132     0(0.00%) |    719      25    1419    880 |    0.00        0.00\nGET      /cart                                                                            157     0(0.00%) |    102      13     983     60 |    0.30        0.00\nPOST     /cart                                                                            145     0(0.00%) |    171      19    1210    100 |    0.30        0.00\nPOST     /cart/checkout                                                                    33     1(3.03%) |    179      24     693     97 |    0.00        0.00\nGET      /product/0PUK6V6EV0                                                               85     0(0.00%) |    151      15    1025     66 |    0.20        0.00\nGET      /product/1YMWWN1N4O                                                               78     0(0.00%) |    133      15    1078     68 |    0.20        0.00\nGET      /product/2ZYFJ3GM2N                                                               67     0(0.00%) |     92      16    1080     41 |    0.00        0.00\nGET      /product/66VCHSJNUP                                                               70     0(0.00%) |     87      15     709     39 |    0.10        0.00\nGET      /product/6E92ZMYYFZ                                                               62     0(0.00%) |     86      15     595     43 |    0.10        0.00\nGET      /product/9SIQT8TOJO                                                               61     0(0.00%) |    159      15     946     85 |    0.00        0.00\nGET      /product/L9ECAV7KIM                                                               78     0(0.00%) |    143      15     888     48 |    0.00        0.00\nGET      /product/LS4PSXUNUM                                                               64     0(0.00%) |    102      16     708     68 |    0.10        0.00\nGET      /product/OLJCESPC7Z                                                               67     0(0.00%) |    114      15    1072     58 |    0.00        0.00\nPOST     /setCurrency                                                                      79     0(0.00%) |    230      24    1097    120 |    0.00        0.00\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\n         Aggregated                                                                      1178     1(0.08%) |    200      13    1419     86 |    1.30        0.00\n\nType     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\nGET      /                                                                                132     0(0.00%) |    719      25    1419    880 |    0.00        0.00\nGET      /cart                                                                            157     0(0.00%) |    102      13     983     60 |    0.30        0.00\nPOST     /cart                                                                            145     0(0.00%) |    171      19    1210    100 |    0.30        0.00\nPOST     /cart/checkout                                                                    33     1(3.03%) |    179      24     693     97 |    0.00        0.00\nGET      /product/0PUK6V6EV0                                                               85     0(0.00%) |    151      15    1025     66 |    0.20        0.00\nGET      /product/1YMWWN1N4O                                                               78     0(0.00%) |    133      15    1078     68 |    0.20        0.00\nGET      /product/2ZYFJ3GM2N                                                               67     0(0.00%) |     92      16    1080     41 |    0.00        0.00\nGET      /product/66VCHSJNUP                                                               70     0(0.00%) |     87      15     709     39 |    0.10        0.00\nGET      /product/6E92ZMYYFZ                                                               62     0(0.00%) |     86      15     595     43 |    0.10        0.00\nGET      /product/9SIQT8TOJO                                                               61     0(0.00%) |    159      15     946     85 |    0.00        0.00\nGET      /product/L9ECAV7KIM                                                               78     0(0.00%) |    143      15     888     48 |    0.00        0.00\nGET      /product/LS4PSXUNUM                                                               64     0(0.00%) |    102      16     708     68 |    0.10        0.00\nGET      /product/OLJCESPC7Z                                                               67     0(0.00%) |    114      15    1072     58 |    0.00        0.00\nPOST     /setCurrency                                                                      79     0(0.00%) |    230      24    1097    120 |    0.00        0.00\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\n         Aggregated                                                                      1178     1(0.08%) |    200      13    1419     86 |    1.30        0.00\n\n"
+}

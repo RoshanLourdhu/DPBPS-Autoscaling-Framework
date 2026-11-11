@@ -18,6 +18,7 @@ poetry.lock
 # Environment files
 .env
 .env.*
+monitoring-values.yaml
 # Node
 node_modules/
 # Build artifacts

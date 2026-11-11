@@ -1,0 +1,90 @@
+{
+  "profile_name": "BURSTY_TRAFFIC",
+  "display_name": "Profile 6: Bursty Traffic (Oscillation Test)",
+  "description": "Alternates between sharp bursts (60 users for 20s) and quiet lulls (5 users for 20s) across 4 cycles (160s total). Evaluates controller damping against scaling thrashing.",
+  "target_host": "frontend:80",
+  "users": 60,
+  "spawn_rate": 20.0,
+  "ramp_up_seconds": 5,
+  "steady_state_seconds": 150,
+  "ramp_down_seconds": 5,
+  "total_duration_seconds": 160,
+  "stages": [
+    {
+      "stage_index": 0,
+      "name": "Burst 1",
+      "target_users": 60,
+      "duration_seconds": 20,
+      "spawn_rate": 20.0,
+      "description": null
+    },
+    {
+      "stage_index": 1,
+      "name": "Lull 1",
+      "target_users": 5,
+      "duration_seconds": 20,
+      "spawn_rate": 20.0,
+      "description": null
+    },
+    {
+      "stage_index": 2,
+      "name": "Burst 2",
+      "target_users": 60,
+      "duration_seconds": 20,
+      "spawn_rate": 20.0,
+      "description": null
+    },
+    {
+      "stage_index": 3,
+      "name": "Lull 2",
+      "target_users": 5,
+      "duration_seconds": 20,
+      "spawn_rate": 20.0,
+      "description": null
+    },
+    {
+      "stage_index": 4,
+      "name": "Burst 3",
+      "target_users": 60,
+      "duration_seconds": 20,
+      "spawn_rate": 20.0,
+      "description": null
+    },
+    {
+      "stage_index": 5,
+      "name": "Lull 3",
+      "target_users": 5,
+      "duration_seconds": 20,
+      "spawn_rate": 20.0,
+      "description": null
+    },
+    {
+      "stage_index": 6,
+      "name": "Burst 4",
+      "target_users": 60,
+      "duration_seconds": 20,
+      "spawn_rate": 20.0,
+      "description": null
+    },
+    {
+      "stage_index": 7,
+      "name": "Lull 4 (Recovery)",
+      "target_users": 5,
+      "duration_seconds": 20,
+      "spawn_rate": 20.0,
+      "description": null
+    }
+  ],
+  "expected_observations": [
+    "Intermittent traffic pulses alternating between ~10 RPS and ~80 RPS",
+    "Cooldown timers dampen transient surges, preventing premature scale-down during lulls",
+    "Zero high-frequency scaling oscillation (thrashing)",
+    "Stable average replica posture under turbulent workload conditions"
+  ],
+  "custom_parameters": {
+    "burst_users": 60,
+    "lull_users": 5,
+    "cycle_count": 4,
+    "period_sec": 40
+  }
+}

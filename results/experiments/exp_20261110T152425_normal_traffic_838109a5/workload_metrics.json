@@ -1,0 +1,190 @@
+{
+  "experiment_id": "exp_20261110T152425_normal_traffic_838109a5",
+  "profile_name": "NORMAL_TRAFFIC",
+  "target_users": 10,
+  "spawn_rate": 2.0,
+  "target_duration_seconds": 130,
+  "actual_duration_seconds": 140.0,
+  "average_frontend_rps": 5.78,
+  "peak_frontend_rps": 10.31,
+  "average_frontend_p95_ms": 255.91,
+  "max_frontend_p95_ms": 1360.97,
+  "observations": [
+    {
+      "timestamp": "2026-11-10T15:24:28.068294+00:00",
+      "elapsed_seconds": 0.0,
+      "frontend_rps": 0.4000128430400327,
+      "frontend_p95_ms": 4.75,
+      "frontend_cpu_percent": 0.71,
+      "cartservice_rps": null,
+      "cartservice_p95_ms": null,
+      "cartservice_cpu_percent": 0.8,
+      "active_services_count": 3
+    },
+    {
+      "timestamp": "2026-11-10T15:24:37.901341+00:00",
+      "elapsed_seconds": 10.0,
+      "frontend_rps": 0.4000414862228018,
+      "frontend_p95_ms": 4.75,
+      "frontend_cpu_percent": 0.55,
+      "cartservice_rps": null,
+      "cartservice_p95_ms": null,
+      "cartservice_cpu_percent": 4.97,
+      "active_services_count": 3
+    },
+    {
+      "timestamp": "2026-11-10T15:24:47.618008+00:00",
+      "elapsed_seconds": 20.0,
+      "frontend_rps": 0.38244204148823113,
+      "frontend_p95_ms": 4.749999999999999,
+      "frontend_cpu_percent": 0.55,
+      "cartservice_rps": null,
+      "cartservice_p95_ms": null,
+      "cartservice_cpu_percent": 4.97,
+      "active_services_count": 3
+    },
+    {
+      "timestamp": "2026-11-10T15:24:57.629117+00:00",
+      "elapsed_seconds": 30.0,
+      "frontend_rps": 0.40001382768726423,
+      "frontend_p95_ms": 4.75,
+      "frontend_cpu_percent": 17.5,
+      "cartservice_rps": 0.6697417261230023,
+      "cartservice_p95_ms": 9.194940349608702,
+      "cartservice_cpu_percent": 45.37,
+      "active_services_count": 5
+    },
+    {
+      "timestamp": "2026-11-10T15:25:07.483363+00:00",
+      "elapsed_seconds": 40.0,
+      "frontend_rps": 1.9965255325148215,
+      "frontend_p95_ms": 971.1283639645549,
+      "frontend_cpu_percent": 34.93,
+      "cartservice_rps": 1.9984795458080573,
+      "cartservice_p95_ms": 16.56705167108283,
+      "cartservice_cpu_percent": 14.07,
+      "active_services_count": 6
+    },
+    {
+      "timestamp": "2026-11-10T15:25:17.541422+00:00",
+      "elapsed_seconds": 50.0,
+      "frontend_rps": 4.410718449904155,
+      "frontend_p95_ms": 1360.9700646709746,
+      "frontend_cpu_percent": 34.93,
+      "cartservice_rps": 2.9021345243098593,
+      "cartservice_p95_ms": 69.71970888477736,
+      "cartservice_cpu_percent": 14.07,
+      "active_services_count": 8
+    },
+    {
+      "timestamp": "2026-11-10T15:25:27.735182+00:00",
+      "elapsed_seconds": 60.0,
+      "frontend_rps": 9.329320034419217,
+      "frontend_p95_ms": 315.911539248905,
+      "frontend_cpu_percent": 29.94,
+      "cartservice_rps": 4.821326925916624,
+      "cartservice_p95_ms": 17.937650994316787,
+      "cartservice_cpu_percent": 28.1,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T15:25:37.508393+00:00",
+      "elapsed_seconds": 70.0,
+      "frontend_rps": 9.743618674831165,
+      "frontend_p95_ms": 308.8026226404365,
+      "frontend_cpu_percent": 22.76,
+      "cartservice_rps": 4.938586015237545,
+      "cartservice_p95_ms": 11.15559621000844,
+      "cartservice_cpu_percent": 9.41,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T15:25:47.568490+00:00",
+      "elapsed_seconds": 80.0,
+      "frontend_rps": 9.834137394441361,
+      "frontend_p95_ms": 93.3455546733473,
+      "frontend_cpu_percent": 22.76,
+      "cartservice_rps": 4.595880507839704,
+      "cartservice_p95_ms": 4.897400899301945,
+      "cartservice_cpu_percent": 9.41,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T15:25:57.651298+00:00",
+      "elapsed_seconds": 90.0,
+      "frontend_rps": 10.307833971328943,
+      "frontend_p95_ms": 90.4939409270219,
+      "frontend_cpu_percent": 23.32,
+      "cartservice_rps": 4.755870640506653,
+      "cartservice_p95_ms": 4.772300976716641,
+      "cartservice_cpu_percent": 6.82,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T15:26:07.567804+00:00",
+      "elapsed_seconds": 100.0,
+      "frontend_rps": 8.163026224255692,
+      "frontend_p95_ms": 91.89284434743509,
+      "frontend_cpu_percent": 26.12,
+      "cartservice_rps": 3.601064575147171,
+      "cartservice_p95_ms": 4.75,
+      "cartservice_cpu_percent": 5.8,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T15:26:17.562288+00:00",
+      "elapsed_seconds": 110.0,
+      "frontend_rps": 8.269587810096429,
+      "frontend_p95_ms": 99.10198496758552,
+      "frontend_cpu_percent": 26.12,
+      "cartservice_rps": 3.589314173502184,
+      "cartservice_p95_ms": 4.75,
+      "cartservice_cpu_percent": 5.8,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T15:26:27.647855+00:00",
+      "elapsed_seconds": 120.0,
+      "frontend_rps": 8.93358321771221,
+      "frontend_p95_ms": 119.09104132658817,
+      "frontend_cpu_percent": 21.58,
+      "cartservice_rps": 3.911326929834027,
+      "cartservice_p95_ms": 4.75,
+      "cartservice_cpu_percent": 6.17,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T15:26:37.589428+00:00",
+      "elapsed_seconds": 130.0,
+      "frontend_rps": 8.291862630735864,
+      "frontend_p95_ms": 113.00466280077953,
+      "frontend_cpu_percent": 24.92,
+      "cartservice_rps": 3.461649879070043,
+      "cartservice_p95_ms": 4.75,
+      "cartservice_cpu_percent": 5.28,
+      "active_services_count": 10
+    }
+  ],
+  "locust_summary": {
+    "users": 10,
+    "spawn_rate": 2.0,
+    "target_host": "frontend:80",
+    "stages": [
+      {
+        "name": "Ramp-Up",
+        "duration_seconds": 5,
+        "target_users": 10
+      },
+      {
+        "name": "Steady Baseline",
+        "duration_seconds": 120,
+        "target_users": 10
+      },
+      {
+        "name": "Ramp-Down",
+        "duration_seconds": 5,
+        "target_users": 0
+      }
+    ]
+  }
+}

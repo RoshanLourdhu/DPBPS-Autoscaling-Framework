@@ -1,0 +1,223 @@
+{
+  "experiment_id": "exp_20261110T165351_gradual_traffic_increase_309b2d79",
+  "profile_name": "GRADUAL_TRAFFIC_INCREASE",
+  "target_users": 50,
+  "target_duration_seconds": 180,
+  "actual_duration_seconds": 190.1,
+  "average_frontend_rps": 18.63,
+  "peak_frontend_rps": 51.46,
+  "average_frontend_p95_ms": 1112.7,
+  "max_frontend_p95_ms": 4171.87,
+  "observations": [
+    {
+      "timestamp": "2026-11-10T16:53:53.487854+00:00",
+      "elapsed_seconds": 0.0,
+      "stage": "Stage 1 (10u)",
+      "frontend_rps": 0.4001185554028901,
+      "frontend_p95_ms": 4.75,
+      "productcatalog_rps": 0.4001155907272377,
+      "cartservice_rps": 0.0,
+      "cartservice_p95_ms": 0.0,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:54:03.122862+00:00",
+      "elapsed_seconds": 10.0,
+      "stage": "Stage 1 (10u)",
+      "frontend_rps": 0.4668222740913638,
+      "frontend_p95_ms": 2425.0,
+      "productcatalog_rps": 0.4445654664024112,
+      "cartservice_rps": 0.022228149728816576,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:54:12.999609+00:00",
+      "elapsed_seconds": 20.0,
+      "stage": "Stage 1 (10u)",
+      "frontend_rps": 0.489048820545207,
+      "frontend_p95_ms": 2425.0,
+      "productcatalog_rps": 0.5112924134366101,
+      "cartservice_rps": 0.0555716097408479,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:54:23.229586+00:00",
+      "elapsed_seconds": 30.0,
+      "stage": "Stage 1 (10u)",
+      "frontend_rps": 2.755983278343204,
+      "frontend_p95_ms": 4171.870311822818,
+      "productcatalog_rps": 9.378841117899166,
+      "cartservice_rps": 1.222358039782198,
+      "cartservice_p95_ms": 4.929245283018868,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:54:33.172903+00:00",
+      "elapsed_seconds": 40.0,
+      "stage": "Stage 1 (10u)",
+      "frontend_rps": 4.901660877876679,
+      "frontend_p95_ms": 3990.99734754388,
+      "productcatalog_rps": 22.6861573719089,
+      "cartservice_rps": 2.522196961690961,
+      "cartservice_p95_ms": 4.856977002571952,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:54:43.021048+00:00",
+      "elapsed_seconds": 50.0,
+      "stage": "Stage 1 (10u)",
+      "frontend_rps": 7.909778642931169,
+      "frontend_p95_ms": 3804.9909346629147,
+      "productcatalog_rps": 38.28427028192381,
+      "cartservice_rps": 3.8994500805433656,
+      "cartservice_p95_ms": 4.818641380466256,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:54:53.076430+00:00",
+      "elapsed_seconds": 60.0,
+      "stage": "Stage 2 (25u)",
+      "frontend_rps": 10.63836741962406,
+      "frontend_p95_ms": 2612.4412845768516,
+      "productcatalog_rps": 52.796182009438446,
+      "cartservice_rps": 5.155157567315912,
+      "cartservice_p95_ms": 4.791304323883414,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:55:03.034560+00:00",
+      "elapsed_seconds": 70.0,
+      "stage": "Stage 2 (25u)",
+      "frontend_rps": 11.223095166651586,
+      "frontend_p95_ms": 93.93885993226255,
+      "productcatalog_rps": 61.870791386092414,
+      "cartservice_rps": 5.600408182217098,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:55:13.179413+00:00",
+      "elapsed_seconds": 80.0,
+      "stage": "Stage 2 (25u)",
+      "frontend_rps": 11.28941695902616,
+      "frontend_p95_ms": 88.15967676753664,
+      "productcatalog_rps": 60.403332043106026,
+      "cartservice_rps": 5.544750881817237,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:55:22.977110+00:00",
+      "elapsed_seconds": 90.0,
+      "stage": "Stage 2 (25u)",
+      "frontend_rps": 15.601819966829126,
+      "frontend_p95_ms": 177.6086956521736,
+      "productcatalog_rps": 72.18500665876378,
+      "cartservice_rps": 7.244928430971326,
+      "cartservice_p95_ms": 4.77932098363197,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:55:33.011452+00:00",
+      "elapsed_seconds": 100.0,
+      "stage": "Stage 2 (25u)",
+      "frontend_rps": 18.41084675309025,
+      "frontend_p95_ms": 178.71794569114834,
+      "productcatalog_rps": 86.78491468499251,
+      "cartservice_rps": 8.667203743665844,
+      "cartservice_p95_ms": 4.780644963567698,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:55:43.050557+00:00",
+      "elapsed_seconds": 110.0,
+      "stage": "Stage 2 (25u)",
+      "frontend_rps": 20.698162953103797,
+      "frontend_p95_ms": 153.6620558413245,
+      "productcatalog_rps": 112.98785696925698,
+      "cartservice_rps": 11.100620036002164,
+      "cartservice_p95_ms": 4.783518081442403,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:55:53.003334+00:00",
+      "elapsed_seconds": 120.0,
+      "stage": "Stage 3 (50u)",
+      "frontend_rps": 25.958157301009265,
+      "frontend_p95_ms": 132.32759968425958,
+      "productcatalog_rps": 130.23816937614623,
+      "cartservice_rps": 12.600988239647213,
+      "cartservice_p95_ms": 4.783747757770621,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:56:03.032367+00:00",
+      "elapsed_seconds": 130.0,
+      "stage": "Stage 3 (50u)",
+      "frontend_rps": 25.460315687712512,
+      "frontend_p95_ms": 90.08254564022744,
+      "productcatalog_rps": 143.21048013656574,
+      "cartservice_rps": 13.279177308403877,
+      "cartservice_p95_ms": 4.769957964183664,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:56:13.082336+00:00",
+      "elapsed_seconds": 140.0,
+      "stage": "Stage 3 (50u)",
+      "frontend_rps": 26.650323827798697,
+      "frontend_p95_ms": 94.95214181180393,
+      "productcatalog_rps": 142.09603521367833,
+      "cartservice_rps": 13.445563059761762,
+      "cartservice_p95_ms": 4.769709612271365,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:56:22.982561+00:00",
+      "elapsed_seconds": 150.0,
+      "stage": "Stage 3 (50u)",
+      "frontend_rps": 34.404008865317564,
+      "frontend_p95_ms": 149.3421052631581,
+      "productcatalog_rps": 164.41556198236623,
+      "cartservice_rps": 16.468143844326814,
+      "cartservice_p95_ms": 4.756418770865951,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:56:33.049972+00:00",
+      "elapsed_seconds": 160.0,
+      "stage": "Stage 3 (50u)",
+      "frontend_rps": 38.18941869450637,
+      "frontend_p95_ms": 175.62395270788855,
+      "productcatalog_rps": 196.05527222712072,
+      "cartservice_rps": 19.846761757564387,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:56:43.101919+00:00",
+      "elapsed_seconds": 170.01,
+      "stage": "Stage 3 (50u)",
+      "frontend_rps": 47.00925893821359,
+      "frontend_p95_ms": 186.07781448017968,
+      "productcatalog_rps": 229.99461523703965,
+      "cartservice_rps": 22.779449522948354,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T16:56:53.027095+00:00",
+      "elapsed_seconds": 180.01,
+      "stage": "Concluded",
+      "frontend_rps": 51.462521931997784,
+      "frontend_p95_ms": 185.79998705222957,
+      "productcatalog_rps": 263.8040564774283,
+      "cartservice_rps": 25.24614136108561,
+      "cartservice_p95_ms": 4.758377420447121,
+      "active_services_count": 10
+    }
+  ],
+  "locust_tail_logs": "GET      /product/1YMWWN1N4O                                                               82     0(0.00%) |     58      14    1268     21 |    0.90        0.00\nGET      /product/2ZYFJ3GM2N                                                               61     0(0.00%) |     70      15    2329     19 |    0.40        0.00\nGET      /product/66VCHSJNUP                                                               57     0(0.00%) |     40      15     201     20 |    0.70        0.00\nGET      /product/6E92ZMYYFZ                                                               71     0(0.00%) |     33      15     144     19 |    0.90        0.00\nGET      /product/9SIQT8TOJO                                                               62     0(0.00%) |     49      15     329     21 |    0.50        0.00\nGET      /product/L9ECAV7KIM                                                               59     0(0.00%) |     96      15    3918     19 |    0.80        0.00\nGET      /product/LS4PSXUNUM                                                               65     0(0.00%) |     56      16    1358     21 |    0.90        0.00\nGET      /product/OLJCESPC7Z                                                               53     0(0.00%) |     97      16    3487     19 |    0.30        0.00\nPOST     /setCurrency                                                                      86     0(0.00%) |     89      24     545     52 |    0.60        0.00\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\n         Aggregated                                                                      1055     0(0.00%) |     83      13    6672     31 |   10.20        0.00\n\nType     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\nGET      /                                                                                 96     0(0.00%) |     94      22     515     77 |    0.50        0.00\nGET      /cart                                                                            119     0(0.00%) |    118      13    4581     22 |    1.40        0.00\nPOST     /cart                                                                            134     0(0.00%) |     83      19     200     86 |    1.00        0.00\nPOST     /cart/checkout                                                                    49     0(0.00%) |    260      24    6672     79 |    0.40        0.00\nGET      /product/0PUK6V6EV0                                                               70     0(0.00%) |     39      15     154     20 |    0.60        0.00\nGET      /product/1YMWWN1N4O                                                               83     0(0.00%) |     57      14    1268     21 |    0.70        0.00\nGET      /product/2ZYFJ3GM2N                                                               63     0(0.00%) |     68      15    2329     19 |    0.50        0.00\nGET      /product/66VCHSJNUP                                                               59     0(0.00%) |     39      15     201     20 |    0.80        0.00\nGET      /product/6E92ZMYYFZ                                                               73     0(0.00%) |     33      14     144     19 |    0.60        0.00\nGET      /product/9SIQT8TOJO                                                               63     0(0.00%) |     49      15     329     21 |    0.80        0.00\nGET      /product/L9ECAV7KIM                                                               60     0(0.00%) |     95      15    3918     19 |    0.50        0.00\nGET      /product/LS4PSXUNUM                                                               67     0(0.00%) |     55      16    1358     21 |    0.80        0.00\nGET      /product/OLJCESPC7Z                                                               54     0(0.00%) |     97      16    3487     19 |    0.20        0.00\nPOST     /setCurrency                                                                      88     0(0.00%) |     89      24     545     52 |    0.60        0.00\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\n         Aggregated                                                                      1078     0(0.00%) |     82      13    6672     31 |    9.40        0.00\n\nType     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\nGET      /                                                                                 96     0(0.00%) |     94      22     515     77 |    0.50        0.00\nGET      /cart                                                                            125     0(0.00%) |    114      13    4581     22 |    1.00        0.00\nPOST     /cart                                                                            138     0(0.00%) |     82      19     200     86 |    0.80        0.00\nPOST     /cart/checkout                                                                    50     0(0.00%) |    257      24    6672     79 |    0.40        0.00\nGET      /product/0PUK6V6EV0                                                               71     0(0.00%) |     38      15     154     20 |    0.60        0.00\nGET      /product/1YMWWN1N4O                                                               86     0(0.00%) |     59      14    1268     22 |    0.60        0.00\nGET      /product/2ZYFJ3GM2N                                                               64     0(0.00%) |     68      15    2329     19 |    0.50        0.00\nGET      /product/66VCHSJNUP                                                               59     0(0.00%) |     39      15     201     20 |    1.00        0.00\nGET      /product/6E92ZMYYFZ                                                               74     0(0.00%) |     33      14     144     19 |    0.80        0.00\nGET      /product/9SIQT8TOJO                                                               63     0(0.00%) |     49      15     329     21 |    0.90        0.00\nGET      /product/L9ECAV7KIM                                                               62     0(0.00%) |     93      15    3918     19 |    0.50        0.00\nGET      /product/LS4PSXUNUM                                                               68     0(0.00%) |     55      16    1358     21 |    0.70        0.00\nGET      /product/OLJCESPC7Z                                                               55     0(0.00%) |     97      16    3487     19 |    0.30        0.00\nPOST     /setCurrency                                                                      89     0(0.00%) |     88      24     545     52 |    0.60        0.00\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\n         Aggregated                                                                      1100     0(0.00%) |     82      13    6672     31 |    9.20        0.00\n\n"
+}

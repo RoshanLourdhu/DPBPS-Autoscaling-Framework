@@ -1,0 +1,74 @@
+{
+  "experiment_id": "exp_20261110T172806_traffic_decrease_71144bfe",
+  "profile_name": "TRAFFIC_DECREASE",
+  "configuration": {
+    "profile_name": "TRAFFIC_DECREASE",
+    "display_name": "Profile 5: Traffic Decrease (Scale-Down)",
+    "description": "Starts at high load (50 users for 60s) then steps down through 25 users (60s) to 5 users (60s). Evaluates scale-down cooldown enforcement (120s) and rollout protection.",
+    "target_host": "frontend:80",
+    "users": 50,
+    "spawn_rate": 5.0,
+    "ramp_up_seconds": 10,
+    "steady_state_seconds": 160,
+    "ramp_down_seconds": 10,
+    "total_duration_seconds": 180,
+    "stages": [
+      {
+        "stage_index": 0,
+        "name": "High Load Tier",
+        "target_users": 50,
+        "duration_seconds": 60,
+        "spawn_rate": 5.0,
+        "description": "High load to establish scaling state"
+      },
+      {
+        "stage_index": 1,
+        "name": "Intermediate Tier",
+        "target_users": 25,
+        "duration_seconds": 60,
+        "spawn_rate": 5.0,
+        "description": "Reduced load tier triggering cooldown tracking"
+      },
+      {
+        "stage_index": 2,
+        "name": "Low Baseline Tier",
+        "target_users": 5,
+        "duration_seconds": 60,
+        "spawn_rate": 5.0,
+        "description": "Return to minimum baseline load"
+      }
+    ],
+    "expected_observations": [
+      "Orderly pressure reduction across all services",
+      "Scale-down decisions strictly held until scale_down_window_sec (120s) expires",
+      "Deployment-phase guardrails prevent scale-down if phase is ACTIVE_DEPLOYMENT",
+      "Replica recommendations decrement safely by at most max_replica_change (2)",
+      "Replica floor at 1 is strictly observed"
+    ],
+    "custom_parameters": {
+      "step_down_sequence": [
+        50,
+        25,
+        5
+      ],
+      "step_sec": 60
+    }
+  },
+  "application_entry_point": "http://frontend:80",
+  "created_at": "2026-11-10T17:28:06.396434+00:00",
+  "start_timestamp": "2026-11-10T17:28:06.402450+00:00",
+  "end_timestamp": "2026-11-10T17:31:16.726903+00:00",
+  "status": "COMPLETED",
+  "selected_concurrency": 50,
+  "target_request_rate": null,
+  "actual_observed_request_rate": 24.88,
+  "failure_information": null,
+  "execution_disabled": false,
+  "tags": [
+    "stage-8",
+    "e05",
+    "traffic-decrease",
+    "live-run"
+  ],
+  "notes": "Live Stage 8 E05 traffic decrease (50 -> 25 -> 5 users @ 5 u/s, 180s total)"
+}

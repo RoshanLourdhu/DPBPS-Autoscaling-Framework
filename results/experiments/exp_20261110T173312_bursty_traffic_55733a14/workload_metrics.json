@@ -1,0 +1,201 @@
+{
+  "experiment_id": "exp_20261110T173312_bursty_traffic_55733a14",
+  "profile_name": "BURSTY_TRAFFIC",
+  "target_users": 60,
+  "target_duration_seconds": 160,
+  "actual_duration_seconds": 170.0,
+  "average_frontend_rps": 32.39,
+  "peak_frontend_rps": 46.54,
+  "average_frontend_p95_ms": 825.31,
+  "max_frontend_p95_ms": 1875.63,
+  "observations": [
+    {
+      "timestamp": "2026-11-10T17:33:14.628069+00:00",
+      "elapsed_seconds": 0.0,
+      "stage": "Burst 1 (60u)",
+      "frontend_rps": 0.342390490544243,
+      "frontend_p95_ms": 4.75,
+      "productcatalog_rps": 0.36568501867217923,
+      "cartservice_rps": 0.0,
+      "cartservice_p95_ms": 0.0,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:33:24.388983+00:00",
+      "elapsed_seconds": 10.0,
+      "stage": "Burst 1 (60u)",
+      "frontend_rps": 0.44461883579314454,
+      "frontend_p95_ms": 97.5,
+      "productcatalog_rps": 0.44462575343541416,
+      "cartservice_rps": 0.022230620456616945,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:33:34.549472+00:00",
+      "elapsed_seconds": 20.0,
+      "stage": "Lull 1 (5u)",
+      "frontend_rps": 7.687758174712764,
+      "frontend_p95_ms": 958.7081838127704,
+      "productcatalog_rps": 26.24569148439959,
+      "cartservice_rps": 3.6294754253214823,
+      "cartservice_p95_ms": 4.869301123743287,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:33:44.427584+00:00",
+      "elapsed_seconds": 30.0,
+      "stage": "Lull 1 (5u)",
+      "frontend_rps": 18.66531189703654,
+      "frontend_p95_ms": 948.7949696105426,
+      "productcatalog_rps": 70.53604406456684,
+      "cartservice_rps": 9.341751091993864,
+      "cartservice_p95_ms": 4.854463938117601,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:33:54.723061+00:00",
+      "elapsed_seconds": 40.0,
+      "stage": "Burst 2 (60u)",
+      "frontend_rps": 34.539128895186295,
+      "frontend_p95_ms": 850.980288653773,
+      "productcatalog_rps": 154.5959043996305,
+      "cartservice_rps": 16.735012022305575,
+      "cartservice_p95_ms": 4.801006695432547,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:34:04.483285+00:00",
+      "elapsed_seconds": 50.0,
+      "stage": "Burst 2 (60u)",
+      "frontend_rps": 41.03819096974761,
+      "frontend_p95_ms": 838.6473468233548,
+      "productcatalog_rps": 181.52834641761766,
+      "cartservice_rps": 19.678960949406417,
+      "cartservice_p95_ms": 4.799000403993004,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:34:14.372622+00:00",
+      "elapsed_seconds": 60.0,
+      "stage": "Lull 2 (5u)",
+      "frontend_rps": 33.13688584495853,
+      "frontend_p95_ms": 677.5698138985414,
+      "productcatalog_rps": 153.8345229393665,
+      "cartservice_rps": 15.616038665126924,
+      "cartservice_p95_ms": 4.777194735045866,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:34:24.467030+00:00",
+      "elapsed_seconds": 70.0,
+      "stage": "Lull 2 (5u)",
+      "frontend_rps": 45.50671031833408,
+      "frontend_p95_ms": 637.4835581131829,
+      "productcatalog_rps": 206.86283225175572,
+      "cartservice_rps": 21.4012060176539,
+      "cartservice_p95_ms": 4.759885528013188,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:34:34.303609+00:00",
+      "elapsed_seconds": 80.0,
+      "stage": "Burst 3 (60u)",
+      "frontend_rps": 40.15560005413757,
+      "frontend_p95_ms": 714.5235234033814,
+      "productcatalog_rps": 175.76849512189702,
+      "cartservice_rps": 18.820640356846894,
+      "cartservice_p95_ms": 4.762729989295378,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:34:44.388191+00:00",
+      "elapsed_seconds": 90.0,
+      "stage": "Burst 3 (60u)",
+      "frontend_rps": 43.69703108368916,
+      "frontend_p95_ms": 688.53748844988,
+      "productcatalog_rps": 197.76543816273775,
+      "cartservice_rps": 20.796323295006637,
+      "cartservice_p95_ms": 4.761511507052721,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:34:54.367115+00:00",
+      "elapsed_seconds": 100.0,
+      "stage": "Lull 3 (5u)",
+      "frontend_rps": 46.5368812637805,
+      "frontend_p95_ms": 774.3471927646233,
+      "productcatalog_rps": 204.42145116014362,
+      "cartservice_rps": 22.157105304284105,
+      "cartservice_p95_ms": 4.759547707345471,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:35:04.476747+00:00",
+      "elapsed_seconds": 110.0,
+      "stage": "Lull 3 (5u)",
+      "frontend_rps": 38.59714557724262,
+      "frontend_p95_ms": 786.3821114167636,
+      "productcatalog_rps": 175.92574568094997,
+      "cartservice_rps": 18.65305517247499,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:35:14.475379+00:00",
+      "elapsed_seconds": 120.0,
+      "stage": "Burst 4 (60u)",
+      "frontend_rps": 41.10535101219071,
+      "frontend_p95_ms": 772.0935364927238,
+      "productcatalog_rps": 196.22734436010717,
+      "cartservice_rps": 20.535766601663454,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:35:24.525885+00:00",
+      "elapsed_seconds": 130.0,
+      "stage": "Burst 4 (60u)",
+      "frontend_rps": 39.781091637774225,
+      "frontend_p95_ms": 753.8888827155688,
+      "productcatalog_rps": 189.2549512239485,
+      "cartservice_rps": 19.445742318449405,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:35:34.502209+00:00",
+      "elapsed_seconds": 140.01,
+      "stage": "Lull 4 (5u)",
+      "frontend_rps": 40.42745773181477,
+      "frontend_p95_ms": 987.5611737657504,
+      "productcatalog_rps": 199.64084598324405,
+      "cartservice_rps": 20.27106797272029,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:35:44.391757+00:00",
+      "elapsed_seconds": 150.01,
+      "stage": "Lull 4 (5u)",
+      "frontend_rps": 35.93000039350396,
+      "frontend_p95_ms": 1875.6331360491813,
+      "productcatalog_rps": 173.59858553931102,
+      "cartservice_rps": 18.057720565743686,
+      "cartservice_p95_ms": 4.75,
+      "active_services_count": 10
+    },
+    {
+      "timestamp": "2026-11-10T17:35:54.355964+00:00",
+      "elapsed_seconds": 160.01,
+      "stage": "Concluded",
+      "frontend_rps": 43.04743439906955,
+      "frontend_p95_ms": 1662.807260264737,
+      "productcatalog_rps": 202.41456106556095,
+      "cartservice_rps": 20.84580948236729,
+      "cartservice_p95_ms": 4.749999999999999,
+      "active_services_count": 10
+    }
+  ],
+  "locust_tail_logs": "GET      /product/9SIQT8TOJO                                                               72     0(0.00%) |    127      15     815     56 |    0.00        0.00\nGET      /product/L9ECAV7KIM                                                               80     0(0.00%) |    190      15    1269     42 |    0.00        0.00\nGET      /product/LS4PSXUNUM                                                               73     0(0.00%) |    144      14     793     66 |    0.00        0.00\nGET      /product/OLJCESPC7Z                                                               77     0(0.00%) |    119      15    1101     23 |    0.10        0.00\nPOST     /setCurrency                                                                     105     0(0.00%) |    233      23    1218    140 |    0.00        0.00\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\n         Aggregated                                                                      1461     0(0.00%) |    250      13    1502     95 |    1.00        0.00\n\n[2026-11-10 17:36:01,926] loadgenerator-7ddc4898db-s49cg/INFO/locust.runners: Shape test stopping\n[2026-11-10 17:36:02,042] loadgenerator-7ddc4898db-s49cg/INFO/locust.main: --run-time limit reached, shutting down\n[2026-11-10 17:36:02,043] loadgenerator-7ddc4898db-s49cg/INFO/locust.main: Shutting down (exit code 0)\nType     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\nGET      /                                                                                279     0(0.00%) |    648      23    1430    610 |    1.78        0.00\nGET      /cart                                                                            147     0(0.00%) |    133      14    1010     66 |    0.94        0.00\nPOST     /cart                                                                            162     0(0.00%) |    158      19    1299     96 |    1.03        0.00\nPOST     /cart/checkout                                                                    51     0(0.00%) |    104      23     500     90 |    0.33        0.00\nGET      /product/0PUK6V6EV0                                                               83     0(0.00%) |    155      13    1204     40 |    0.53        0.00\nGET      /product/1YMWWN1N4O                                                               71     0(0.00%) |    155      15    1223     33 |    0.45        0.00\nGET      /product/2ZYFJ3GM2N                                                               82     0(0.00%) |    174      14    1305     48 |    0.52        0.00\nGET      /product/66VCHSJNUP                                                               88     0(0.00%) |    124      15    1416     47 |    0.56        0.00\nGET      /product/6E92ZMYYFZ                                                               91     0(0.00%) |    178      15    1502     64 |    0.58        0.00\nGET      /product/9SIQT8TOJO                                                               72     0(0.00%) |    127      15     815     56 |    0.46        0.00\nGET      /product/L9ECAV7KIM                                                               80     0(0.00%) |    190      15    1269     42 |    0.51        0.00\nGET      /product/LS4PSXUNUM                                                               73     0(0.00%) |    144      14     793     66 |    0.47        0.00\nGET      /product/OLJCESPC7Z                                                               77     0(0.00%) |    119      15    1101     23 |    0.49        0.00\nPOST     /setCurrency                                                                     105     0(0.00%) |    233      23    1218    140 |    0.67        0.00\n--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------\n         Aggregated                                                                      1461     0(0.00%) |    250      13    1502     95 |    9.31        0.00\n\nResponse time percentiles (approximated)\nType     Name                                                                                  50%    66%    75%    80%    90%    95%    98%    99%  99.9% 99.99%   100% # reqs\n--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------\nGET      /                                                                                     610    770    910    930   1200   1300   1300   1400   1400   1400   1400    279\nGET      /cart                                                                                  66    120    200    270    320    410    690    700   1000   1000   1000    147\nPOST     /cart                                                                                  96    120    190    200    400    490    590   1200   1300   1300   1300    162\nPOST     /cart/checkout                                                                         90     97    110    190    200    300    400    500    500    500    500     51\nGET      /product/0PUK6V6EV0                                                                    40    100    160    300    400    740   1200   1200   1200   1200   1200     83\nGET      /product/1YMWWN1N4O                                                                    33     94    170    300    470    510   1000   1200   1200   1200   1200     71\nGET      /product/2ZYFJ3GM2N                                                                    50     90    160    300    510    700   1200   1300   1300   1300   1300     82\nGET      /product/66VCHSJNUP                                                                    50     88    150    230    340    420    790   1400   1400   1400   1400     88\nGET      /product/6E92ZMYYFZ                                                                    64    130    170    210    500    900   1200   1500   1500   1500   1500     91\nGET      /product/9SIQT8TOJO                                                                    57     94    170    210    390    500    600    820    820    820    820     72\nGET      /product/L9ECAV7KIM                                                                    42    150    310    390    590    840    940   1300   1300   1300   1300     80\nGET      /product/LS4PSXUNUM                                                                    66    110    210    280    410    510    590    790    790    790    790     73\nGET      /product/OLJCESPC7Z                                                                    23     65    120    210    400    500    600   1100   1100   1100   1100     77\nPOST     /setCurrency                                                                          140    210    300    480    560    810    890   1100   1200   1200   1200    105\n--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------\n         Aggregated                                                                             95    210    400    490    690    930   1200   1300   1400   1500   1500   1461\n\n"
+}

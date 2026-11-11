@@ -1,0 +1,96 @@
+================================================================================
+DPBPS EXPERIMENT EXECUTION LOG: exp_20261110T152425_normal_traffic_838109a5
+Profile: NORMAL_TRAFFIC | Target Host: frontend:80
+Mode: ACTUATOR DRY-RUN (SCALING_ENABLED=False)
+================================================================================
+
+--- CONSOLE AND EXECUTION TRACE ---
+================================================================================
+STAGE 8.5 — LIVE EXPERIMENT E01: NORMAL_TRAFFIC EXECUTION
+================================================================================
+
+[STEP 1] Pre-Execution Safety Verifications...
+  [OK] SCALING_ENABLED is False (Actuator DRY-RUN posture confirmed).
+  [OK] Prometheus connectivity verified.
+  [OK] Cluster reconciliation: none (Cluster state clean; loadgenerator is already at 0 replicas.)
+
+[STEP 2] Creating Experiment Record...
+  [OK] Experiment created: exp_20261110T152425_normal_traffic_838109a5
+       Profile: NORMAL_TRAFFIC
+       Users: 10, Spawn Rate: 2.0 u/s
+       Stages: [('Ramp-Up', 5, 10), ('Steady Baseline', 120, 10), ('Ramp-Down', 5, 0)]
+       Total Duration: 130s
+       Target Host: frontend:80
+
+[STEP 3] Transitioning to READY status...
+  [OK] Experiment exp_20261110T152425_normal_traffic_838109a5 is in READY status.
+
+[STEP 4] Authorizing Experiment Execution Lock...
+  [OK] Master safety check passed. can_execute=True.
+
+[STEP 5] Starting Experiment exp_20261110T152425_normal_traffic_838109a5 via ExperimentExecutor...
+  [OK] Experiment started successfully: status=RUNNING
+       Started at: 2026-11-10T15:24:25.856401+00:00
+       Target duration: 130s
+
+[STEP 6] Monitoring Live Workload Execution (130 seconds)...
+TIME     | ELAPSED  | FE_RPS   | FE_P95   | FE_CPU%  | CART_RPS | CART_P95 | DPBPS_DECISIONS      | STATUS
+-------------------------------------------------------------------------------------------------------------------
+15:24:25 |    0.0s | 0.4      | 4.8ms    | 0.7%     | --       | --       | 3 evaluated (3 HOLD) | RUNNING
+15:24:35 |   10.0s | 0.4      | 4.8ms    | 0.6%     | --       | --       | 3 evaluated (3 HOLD) | RUNNING
+15:24:45 |   20.0s | 0.4      | 4.7ms    | 0.6%     | --       | --       | 3 evaluated (3 HOLD) | RUNNING
+15:24:55 |   30.0s | 0.4      | 4.8ms    | 17.5%    | 0.7      | 9.2ms    | 5 evaluated (5 HOLD) | RUNNING
+15:25:05 |   40.0s | 2.0      | 971.1ms  | 34.9%    | 2.0      | 16.6ms   | 5 evaluated (4 HOLD) | RUNNING
+15:25:15 |   50.0s | 4.4      | 1361.0ms | 34.9%    | 2.9      | 69.7ms   | 8 evaluated (8 HOLD) | RUNNING
+15:25:25 |   60.0s | 9.3      | 315.9ms  | 29.9%    | 4.8      | 17.9ms   | 10 evaluated (10 HOLD) | RUNNING
+15:25:35 |   70.0s | 9.7      | 308.8ms  | 22.8%    | 4.9      | 11.2ms   | 10 evaluated (10 HOLD) | RUNNING
+15:25:45 |   80.0s | 9.8      | 93.3ms   | 22.8%    | 4.6      | 4.9ms    | 10 evaluated (10 HOLD) | RUNNING
+15:25:55 |   90.0s | 10.3     | 90.5ms   | 23.3%    | 4.8      | 4.8ms    | 10 evaluated (10 HOLD) | RUNNING
+15:26:05 |  100.0s | 8.2      | 91.9ms   | 26.1%    | 3.6      | 4.8ms    | 10 evaluated (10 HOLD) | RUNNING
+15:26:15 |  110.0s | 8.3      | 99.1ms   | 26.1%    | 3.6      | 4.8ms    | 10 evaluated (9 HOLD) | RUNNING
+15:26:25 |  120.0s | 8.9      | 119.1ms  | 21.6%    | 3.9      | 4.8ms    | 10 evaluated (10 HOLD) | RUNNING
+15:26:35 |  130.0s | 8.3      | 113.0ms  | 24.9%    | 3.5      | 4.8ms    | 10 evaluated (10 HOLD) | RUNNING
+
+[15:26:45] [WATCHDOG TRIGGERED] Experiment completed: Duration expired: elapsed 140.1s exceeded Nones limit
+
+[STEP 7] Post-Experiment Verification and Persistence...
+  [OK] Total execution duration: 140.0s (Target: 130s)
+  [OK] Retrieved final loadgenerator Locust logs.
+  [OK] Master safety lock re-locked: EXPERIMENT_EXECUTION_ENABLED=false.
+  [OK] Post-run cluster state: {'reconciled': True, 'action': 'none', 'current_replicas': 0, 'reason': 'Cluster state clean; loadgenerator is already at 0 replicas.'}
+  [OK] Wrote 14 snapshots to telemetry_metrics.json
+Traceback (most recent call last):
+  File "D:\CIS\Deployment Aware AAutoscaling Platform\backend\scripts\execute_e01_experiment.py", line 366, in <module>
+    main()
+    ~~~~^^
+  File "D:\CIS\Deployment Aware AAutoscaling Platform\backend\scripts\execute_e01_experiment.py", line 290, in main
+    decisions_path.write_text(json.dumps({
+                              ~~~~~~~~~~^^
+        "experiment_id": exp_id,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+        "total_evaluations": len(dpbps_decision_history),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        "evaluations": dpbps_decision_history,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    }, indent=2), encoding="utf-8")
+    ^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\json\__init__.py", line 242, in dumps
+    **kw).encode(obj)
+          ~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\json\encoder.py", line 202, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\json\encoder.py", line 263, in iterencode
+    return _iterencode(o, 0)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\json\encoder.py", line 182, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+                    f'is not JSON serializable')
+TypeError: Object of type datetime is not JSON serializable
+
+
+--- POST-EXPERIMENT POSTURE CONFIRMATION ---
+Status: COMPLETED
+Loadgenerator replicas: 0
+Cluster modified: False (DRY-RUN enforced)
+Total telemetry snapshots: 14
+Total DPBPS decisions: 108 (HOLD=107, SCALE_UP=1, SCALE_DOWN=0)
+Artifacts successfully written to: results\experiments\exp_20261110T152425_normal_traffic_838109a5

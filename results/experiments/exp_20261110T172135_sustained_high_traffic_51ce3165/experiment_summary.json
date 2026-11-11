@@ -1,0 +1,22 @@
+{
+  "experiment_id": "exp_20261110T172135_sustained_high_traffic_51ce3165",
+  "profile_name": "SUSTAINED_HIGH_TRAFFIC",
+  "status": "COMPLETED",
+  "created_at": "2026-11-10T17:21:35.936855+00:00",
+  "started_at": "2026-11-10T17:21:35.946191+00:00",
+  "ended_at": "2026-11-10T17:25:26.355577+00:00",
+  "duration_seconds": 230.1,
+  "target_duration_seconds": 220,
+  "average_frontend_rps": 50.02,
+  "peak_frontend_rps": 66.11,
+  "average_frontend_p95_ms": 208.6,
+  "max_frontend_p95_ms": 364.86,
+  "scaling_decisions_scale_up": 7,
+  "scaling_decisions_scale_down": 0,
+  "scaling_decisions_hold": 219,
+  "bottlenecks_detected": 80,
+  "actuator_mode": "DRY_RUN",
+  "cluster_modified": false,
+  "completed_successfully": true,
+  "post_run_loadgenerator_replicas": 0
+}

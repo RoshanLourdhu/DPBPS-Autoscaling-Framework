@@ -1,0 +1,49 @@
+{
+  "profile_name": "SUSTAINED_HIGH_TRAFFIC",
+  "display_name": "Profile 4: Sustained High Traffic (Saturation)",
+  "description": "Ramps up to 60 users over 20s and maintains continuous high load for 180s. Evaluates controller stability and whether replica counts remain steady without flapping.",
+  "target_host": "frontend:80",
+  "users": 60,
+  "spawn_rate": 5.0,
+  "ramp_up_seconds": 20,
+  "steady_state_seconds": 180,
+  "ramp_down_seconds": 20,
+  "total_duration_seconds": 220,
+  "stages": [
+    {
+      "stage_index": 0,
+      "name": "Controlled Ramp-Up",
+      "target_users": 60,
+      "duration_seconds": 20,
+      "spawn_rate": 5.0,
+      "description": "Controlled user ramp to saturation point"
+    },
+    {
+      "stage_index": 1,
+      "name": "Sustained High Load",
+      "target_users": 60,
+      "duration_seconds": 180,
+      "spawn_rate": 5.0,
+      "description": "Extended saturation plateau spanning 12 scrape intervals"
+    },
+    {
+      "stage_index": 2,
+      "name": "Controlled Ramp-Down",
+      "target_users": 0,
+      "duration_seconds": 20,
+      "spawn_rate": 5.0,
+      "description": "Orderly traffic cessation"
+    }
+  ],
+  "expected_observations": [
+    "Sustained elevated request rate (~70-85 RPS)",
+    "Persistent resource pressure across tiers",
+    "Bottleneck service remains consistent throughout saturation window",
+    "Target replicas stabilize at optimum tier without repeated flapping",
+    "Zero unhandled exceptions or crash-loops"
+  ],
+  "custom_parameters": {
+    "sustained_users": 60,
+    "plateau_duration_sec": 180
+  }
+}

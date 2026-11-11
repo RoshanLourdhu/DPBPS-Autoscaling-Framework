@@ -10,3 +10,15 @@ SCALING_ENABLED = os.getenv("SCALING_ENABLED", "false").lower() == "true"
 # Optional allowlist of services that may be scaled (comma‑separated list)
 # If empty, all services are allowed.
 SCALING_ALLOWLIST = [s.strip() for s in os.getenv("SCALING_ALLOWLIST", "").split(",") if s.strip()]
+
+# Prometheus configuration
+PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090").rstrip("/")
+PROMETHEUS_TIMEOUT_SECONDS = float(os.getenv("PROMETHEUS_TIMEOUT_SECONDS", "10.0"))
+PROMETHEUS_MAX_AGE_SECONDS = float(os.getenv("PROMETHEUS_MAX_AGE_SECONDS", "60.0"))
+
+# Kubernetes namespaces
+KUBERNETES_NAMESPACE = os.getenv("KUBERNETES_NAMESPACE", "online-boutique")
+KUBERNETES_MONITORING_NAMESPACE = os.getenv("KUBERNETES_MONITORING_NAMESPACE", "monitoring")
+PROMETHEUS_SERVICE_NAME = os.getenv("PROMETHEUS_SERVICE_NAME", "dpbps-monitoring-kube-prom-prometheus")
+PROMETHEUS_SERVICE_PORT = int(os.getenv("PROMETHEUS_SERVICE_PORT", "9090"))
+
