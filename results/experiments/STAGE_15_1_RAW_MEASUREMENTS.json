@@ -1,0 +1,139 @@
+{
+  "metadata": {
+    "experiment": "STAGE_15_1_CONTROLLED_LIVE_SCALING",
+    "target_service": "productcatalogservice",
+    "namespace": "online-boutique",
+    "start_time": "2026-11-11T17:34:12.713241+00:00",
+    "operator_authorized": true,
+    "max_replicas_authorized": 3,
+    "max_delta_authorized": 1,
+    "cooldown_sec": 60,
+    "end_time": "2026-11-11T17:35:41.336300+00:00",
+    "overall_success": true
+  },
+  "phases": [
+    {
+      "phase_name": "PHASE_1_QUIESCENT_EVALUATION",
+      "timestamp": "2026-11-11T17:34:14.055454+00:00",
+      "bottleneck_detected": null,
+      "productcatalogservice_decision": "HOLD",
+      "productcatalogservice_reason": "Pressure within bounds (aggregate=0.00) \u2013 hold",
+      "scaling_executed": false,
+      "cluster_modified": false
+    },
+    {
+      "phase_name": "PHASE_2_CONTROLLED_SCALE_UP",
+      "timestamp": "2026-11-11T17:34:32.261896+00:00",
+      "decision": {
+        "service_name": "productcatalogservice",
+        "action": "SCALE_UP",
+        "previous_replicas": 1,
+        "requested_replicas": 2,
+        "priority_score": 0.9891649999999997,
+        "phase": "NORMAL_OPERATION",
+        "bottleneck": "productcatalogservice",
+        "reason": "High pressure (aggregate=0.99) \u2013 scaling up",
+        "timestamp": "2026-11-11 17:34:14.055454",
+        "simulated": true
+      },
+      "actuator_result": {
+        "operation_id": "06bfc207-d51c-4989-be48-2794ad1c6e58",
+        "decision_id": null,
+        "service_name": "productcatalogservice",
+        "namespace": "online-boutique",
+        "current_replicas": 1,
+        "requested_replicas": 2,
+        "action": "SCALE_UP",
+        "execution_mode": "LIVE",
+        "status": "APPLIED",
+        "cluster_modified": true,
+        "reason": "Successfully scaled deployment 'productcatalogservice' from 1 to 2 replicas.",
+        "deployment_phase": "NORMAL_OPERATION",
+        "readiness_status": "VERIFIED",
+        "rollback_status": "NOT_REQUIRED",
+        "validation_result": "APPLIED_LIVE",
+        "timestamp": "2026-11-11 17:34:32.233373+00:00",
+        "details": {
+          "readiness": {
+            "ready": true,
+            "status": "VERIFIED",
+            "message": "Service productcatalogservice ready with 2/2 replicas.",
+            "elapsed_seconds": 18.089693000074476
+          },
+          "rollback": {
+            "rollback_status": "NOT_REQUIRED"
+          }
+        }
+      },
+      "elapsed_seconds": 18.176,
+      "active_pods_count": 2,
+      "pods": [
+        {
+          "name": "productcatalogservice-5cc5ddd49b-tvnmc",
+          "ip": "10.244.0.22",
+          "phase": "Running",
+          "ready": "True",
+          "start_time": "2026-11-11T17:34:14+00:00"
+        },
+        {
+          "name": "productcatalogservice-5cc5ddd49b-xzqw2",
+          "ip": "10.244.0.9",
+          "phase": "Running",
+          "ready": "True",
+          "start_time": "2026-11-09T02:45:35+00:00"
+        }
+      ]
+    },
+    {
+      "phase_name": "PHASE_4_CONTROLLED_RESTORATION",
+      "timestamp": "2026-11-11T17:35:41.335748+00:00",
+      "decision": {
+        "service_name": "productcatalogservice",
+        "action": "SCALE_DOWN",
+        "previous_replicas": 2,
+        "requested_replicas": 1,
+        "priority_score": 0.0,
+        "phase": "NORMAL_OPERATION",
+        "bottleneck": null,
+        "reason": "Low pressure (aggregate=0.00) \u2013 scaling down",
+        "timestamp": "2026-11-11 17:35:34.262606",
+        "simulated": true
+      },
+      "actuator_result": {
+        "operation_id": "c08a1d4d-2238-4769-8587-c59ac42537cb",
+        "decision_id": null,
+        "service_name": "productcatalogservice",
+        "namespace": "online-boutique",
+        "current_replicas": 2,
+        "requested_replicas": 1,
+        "action": "SCALE_DOWN",
+        "execution_mode": "LIVE",
+        "status": "APPLIED",
+        "cluster_modified": true,
+        "reason": "Successfully scaled deployment 'productcatalogservice' from 2 to 1 replicas.",
+        "deployment_phase": "NORMAL_OPERATION",
+        "readiness_status": "VERIFIED",
+        "rollback_status": "NOT_REQUIRED",
+        "validation_result": "APPLIED_LIVE",
+        "timestamp": "2026-11-11 17:35:36.318635+00:00",
+        "details": {
+          "readiness": {
+            "ready": true,
+            "status": "VERIFIED",
+            "message": "Service productcatalogservice ready with 1/1 replicas.",
+            "elapsed_seconds": 2.0182365000946447
+          },
+          "rollback": {
+            "rollback_status": "NOT_REQUIRED"
+          }
+        }
+      },
+      "elapsed_seconds": 2.054,
+      "final_desired_replicas": 1,
+      "final_ready_replicas": 1,
+      "remaining_pods": [
+        "productcatalogservice-5cc5ddd49b-xzqw2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "profile_name": "SUDDEN_TRAFFIC_SPIKE",
+  "display_name": "Profile 3: Sudden Traffic Spike (Surge)",
+  "description": "Establishes a 5-user baseline for 30s, then injects a sharp surge to 80 users at 20 users/sec, maintains peak for 60s, then recovers back to 5 users.",
+  "target_host": "frontend:80",
+  "users": 80,
+  "spawn_rate": 20.0,
+  "ramp_up_seconds": 5,
+  "steady_state_seconds": 60,
+  "ramp_down_seconds": 5,
+  "total_duration_seconds": 120,
+  "stages": [
+    {
+      "stage_index": 0,
+      "name": "Pre-Spike Baseline",
+      "target_users": 5,
+      "duration_seconds": 30,
+      "spawn_rate": 20.0,
+      "description": "Quiet baseline before spike arrival"
+    },
+    {
+      "stage_index": 1,
+      "name": "Sharp Spike Peak",
+      "target_users": 80,
+      "duration_seconds": 60,
+      "spawn_rate": 20.0,
+      "description": "Aggressive traffic surge challenging queue depths"
+    },
+    {
+      "stage_index": 2,
+      "name": "Post-Spike Recovery",
+      "target_users": 5,
+      "duration_seconds": 30,
+      "spawn_rate": 20.0,
+      "description": "Rapid reduction back to baseline"
+    }
+  ],
+  "expected_observations": [
+    "Sharp inflection in request rate (~5 RPS to ~100+ RPS within seconds)",
+    "P95 latency spike and temporary queue buildup",
+    "Rapid bottleneck detection identifying root-cause service",
+    "Proposed scale-up bounded by max delta rule (<= 2 replicas per evaluation)",
+    "Absence of cluster over-allocation shock"
+  ],
+  "custom_parameters": {
+    "spike_users": 80,
+    "spike_spawn_rate": 20.0
+  }
+}

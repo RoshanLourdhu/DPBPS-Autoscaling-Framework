@@ -1,54 +1,121 @@
 // src/pages/OverviewDashboard.tsx
 import { useEffect, useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   fetchHealth,
+  fetchServices,
   fetchPipelineEvaluation,
   triggerPipelineEvaluation,
   updateDeploymentPhase,
+  DEPLOYMENT_PHASES,
 } from "../services/api";
 import type {
   HealthResponse,
+  ServiceInfo,
   PipelineEvaluationResponse,
-  PipelineServiceResult,
+  DeploymentPhase,
 } from "../services/api";
 import { PageHeader } from "../components/ui/PageHeader";
 import { MetricCard } from "../components/ui/MetricCard";
+import { SectionHeader } from "../components/ui/SectionHeader";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { DataTable } from "../components/ui/DataTable";
+import type { ColumnDef } from "../components/ui/DataTable";
 import { LoadingState } from "../components/ui/LoadingState";
 import { ErrorState } from "../components/ui/ErrorState";
 import {
-  RefreshCw,
-  ShieldCheck,
-  Server,
-  Activity,
-  Layers,
-  ArrowUpRight,
-  ArrowDownRight,
-  Clock,
+  Boxes,
   CheckCircle2,
+  Flame,
+  Activity,
+  Zap,
+  Brain,
+  ShieldCheck,
+  RefreshCw,
+  Server,
+  Layers,
+  Radio,
+  ExternalLink,
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ReferenceLine,
+} from "recharts";
+
+interface TelemetrySnapshot {
+  time: string;
+  throughput: number;
+  avgLatency: number;
+  avgCpu: number;
+  avgMemory: number;
+  errorRate: number;
+}
 
 export default function OverviewDashboard() {
-  const [pipelineData, setPipelineData] = useState<PipelineEvaluationResponse | null>(null);
   const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [services, setServices] = useState<ServiceInfo[]>([]);
+  const [pipeline, setPipeline] = useState<PipelineEvaluationResponse | null>(null);
+  const [history, setHistory] = useState<TelemetrySnapshot[]>([]);
+  const [selectedPhase, setSelectedPhase] = useState<DeploymentPhase | string>("NORMAL_OPERATION");
+  const [chartMetric, setChartMetric] = useState<"throughput" | "latency" | "cpu">("throughput");
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [evaluating, setEvaluating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
-  const [selectedPhase, setSelectedPhase] = useState<string>("NORMAL_OPERATION");
-  const [phaseUpdating, setPhaseUpdating] = useState<boolean>(false);
   const [lastRefreshed, setLastRefreshed] = useState<string>("");
 
-  const loadData = useCallback(async (isManual: boolean = false) => {
+  const navigate = useNavigate();
+
+  const loadData = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true);
     try {
-      const [h, pipe] = await Promise.all([
+      const [h, svc, pipe] = await Promise.all([
         fetchHealth(),
+        fetchServices(),
         fetchPipelineEvaluation(),
       ]);
+
       setHealth(h);
-      setPipelineData(pipe);
-      setSelectedPhase(pipe.deployment_phase);
+      setServices(svc);
+      setPipeline(pipe);
+      const activePhase = pipe.deployment_phase || h.deployment_phase;
+      if (activePhase) {
+        setSelectedPhase(activePhase);
+      }
       setLastRefreshed(new Date().toLocaleTimeString());
+
+      // Append new snapshot to rolling history
+      const totalThroughput = svc.reduce((sum, s) => sum + (s.request_rate || 0), 0);
+      const activeServices = svc.filter((s) => (s.request_rate || 0) > 0);
+      const avgLatency =
+        activeServices.length > 0
+          ? activeServices.reduce((sum, s) => sum + (s.p95_latency || 0), 0) / activeServices.length
+          : svc.reduce((sum, s) => sum + (s.p95_latency || 0), 0) / Math.max(1, svc.length);
+      const avgCpu =
+        svc.reduce((sum, s) => sum + (s.cpu_utilisation || 0), 0) / Math.max(1, svc.length) * 100;
+      const avgMemory =
+        svc.reduce((sum, s) => sum + (s.memory_utilisation || 0), 0) / Math.max(1, svc.length) * 100;
+      const errorRate =
+        svc.reduce((sum, s) => sum + (s.error_rate || 0), 0) / Math.max(1, svc.length) * 100;
+
+      const newSnapshot: TelemetrySnapshot = {
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+        throughput: parseFloat(totalThroughput.toFixed(1)),
+        avgLatency: parseFloat(avgLatency.toFixed(1)),
+        avgCpu: parseFloat(avgCpu.toFixed(1)),
+        avgMemory: parseFloat(avgMemory.toFixed(1)),
+        errorRate: parseFloat(errorRate.toFixed(2)),
+      };
+
+      setHistory((prev) => [...prev.slice(-14), newSnapshot]);
       setError(null);
     } catch (e: any) {
       setError(e.message || "Failed to communicate with DPBPS backend.");
@@ -60,416 +127,535 @@ export default function OverviewDashboard() {
 
   useEffect(() => {
     loadData();
+    const interval = setInterval(() => loadData(false), 10000);
+    return () => clearInterval(interval);
   }, [loadData]);
 
-  // Controlled auto-refresh (10s interval)
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const interval = setInterval(() => {
-      loadData(false);
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [autoRefresh, loadData]);
-
-  const handleManualRefresh = () => {
-    loadData(true);
-  };
-
-  const handleTriggerEvaluation = async () => {
-    setRefreshing(true);
+  const handleManualEvaluation = async () => {
+    setEvaluating(true);
     try {
       const updated = await triggerPipelineEvaluation();
-      setPipelineData(updated);
-      setLastRefreshed(new Date().toLocaleTimeString());
+      setPipeline(updated);
+      await loadData(false);
     } catch (e: any) {
       setError(`Evaluation failed: ${e.message}`);
     } finally {
-      setRefreshing(false);
+      setEvaluating(false);
     }
   };
 
-  const handlePhaseChange = async (newPhase: string) => {
-    setPhaseUpdating(true);
+  const handlePhaseChange = async (newPhase: DeploymentPhase | string) => {
     try {
-      await updateDeploymentPhase(newPhase);
-      setSelectedPhase(newPhase);
+      const res = await updateDeploymentPhase(newPhase);
+      setSelectedPhase(res?.phase || newPhase);
       await loadData(false);
     } catch (e: any) {
       setError(`Phase update failed: ${e.message}`);
-    } finally {
-      setPhaseUpdating(false);
     }
   };
 
-  if (loading) return <LoadingState />;
-  if (error && !pipelineData) return <ErrorState message={error} />;
+  // KPI Computations
+  const totalServicesCount = services.length;
+  const healthyServicesCount = services.filter((s) => s.health === "HEALTHY").length;
+  const bottleneckService = pipeline?.bottleneck_service;
+  const totalThroughput = services.reduce((sum, s) => sum + (s.request_rate || 0), 0);
+  const activeServices = services.filter((s) => (s.request_rate || 0) > 0);
+  const averageLatency =
+    activeServices.length > 0
+      ? activeServices.reduce((sum, s) => sum + (s.p95_latency || 0), 0) / activeServices.length
+      : services.reduce((sum, s) => sum + (s.p95_latency || 0), 0) / Math.max(1, services.length);
 
-  // Aggregated Summary Statistics
-  const totalServices = pipelineData?.total_services ?? 0;
-  const completeCount = pipelineData?.complete_telemetry_services ?? 0;
-  const incompleteCount = pipelineData?.incomplete_telemetry_services ?? 0;
-  const totalReplicas = pipelineData?.services.reduce((acc, s) => acc + s.ready_replicas, 0) ?? 0;
-  const scaleUpCount = pipelineData?.scale_up_count ?? 0;
-  const scaleDownCount = pipelineData?.scale_down_count ?? 0;
-  const holdCount = pipelineData?.hold_count ?? 0;
-  const bottleneckService = pipelineData?.bottleneck_service;
-
-  return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Top Banner: Strict Dry-Run Safety Notice */}
-      <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <div className="flex items-center space-x-3">
-          <ShieldCheck className="h-6 w-6 text-amber-600 flex-shrink-0" />
-          <div>
-            <h3 className="text-sm font-bold text-amber-900 tracking-wide uppercase">
-              Actuator Operational Mode: DRY-RUN (Zero Cluster Mutations)
-            </h3>
-            <p className="text-xs text-amber-700">
-              Live scaling is strictly guarded (<code className="font-mono bg-amber-100 px-1 rounded">SCALING_ENABLED=false</code>). 
-              All proposed replica adjustments are simulated and validated without modifying Kubernetes Deployments.
-            </p>
-          </div>
+  // Table Columns
+  const serviceColumns: ColumnDef<ServiceInfo>[] = [
+    {
+      key: "name",
+      header: "Microservice",
+      render: (s) => (
+        <div className="flex items-center space-x-2">
+          <span className="font-semibold text-text-primary">{s.name}</span>
+          {s.name === bottleneckService && (
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
+              BOTTLENECK
+            </span>
+          )}
         </div>
-        <div className="flex items-center space-x-2 text-xs">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-green-100 text-green-800">
-            Backend: {health?.status ?? "ok"}
-          </span>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-800">
-            K8s: docker-desktop
-          </span>
-        </div>
-      </div>
-
-      {/* Header with Refresh Controls */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <PageHeader
-          title="DPBPS Pipeline Dashboard"
-          subtitle="Deployment-Phase-Aware Bottleneck-Prioritized Scaling for Microservices"
+      ),
+    },
+    {
+      key: "health",
+      header: "Status",
+      render: (s) => (
+        <StatusBadge
+          status={s.health}
+          variant={s.health === "HEALTHY" ? "emerald" : "amber"}
+          size="xs"
         />
-        <div className="flex items-center space-x-3">
-          <div className="text-xs text-gray-500 flex items-center space-x-1">
-            <Clock className="h-3.5 w-3.5" />
-            <span>Updated: {lastRefreshed || "Just now"}</span>
-          </div>
-
-          <button
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors ${
-              autoRefresh
-                ? "bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
-                : "bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
-            }`}
-          >
-            {autoRefresh ? "Auto-Refresh: ON (10s)" : "Auto-Refresh: PAUSED"}
-          </button>
-
-          <button
-            onClick={handleManualRefresh}
-            disabled={refreshing}
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm disabled:opacity-50"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-blue-600" : ""}`} />
-            <span>Refresh</span>
-          </button>
-
-          <button
-            onClick={handleTriggerEvaluation}
-            disabled={refreshing}
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded bg-blue-600 text-white hover:bg-blue-700 shadow-sm disabled:opacity-50"
-          >
-            <span>Run Pipeline</span>
-          </button>
-        </div>
-      </div>
-
-      {/* SECTION E: DEPLOYMENT-PHASE MONITORING & CONTROL */}
-      <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center space-x-2">
-              <Layers className="h-4 w-4 text-indigo-600" />
-              <span>Deployment Phase Management</span>
-            </h2>
-            <p className="text-xs text-gray-500">
-              DPBPS scaling algorithms adapt according to the CI/CD lifecycle phase to prevent scale-down during rollouts.
-            </p>
-          </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-            Active Phase: {selectedPhase}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-          {[
-            { phase: "NORMAL_OPERATION", label: "Normal Operation", desc: "Bidirectional scaling with standard cooldowns" },
-            { phase: "PRE_DEPLOYMENT", label: "Pre-Deployment", desc: "Warmup & pre-scale protection" },
-            { phase: "ACTIVE_DEPLOYMENT", label: "Active Deployment", desc: "Scale-down strictly blocked during rollout" },
-            { phase: "POST_DEPLOYMENT", label: "Post-Deployment", desc: "Stabilization window before scale-down" },
-          ].map((item) => (
-            <button
-              key={item.phase}
-              disabled={phaseUpdating}
-              onClick={() => handlePhaseChange(item.phase)}
-              className={`p-3 text-left rounded-lg border transition-all ${
-                selectedPhase === item.phase
-                  ? "bg-indigo-50 border-indigo-500 text-indigo-900 shadow-sm ring-1 ring-indigo-500"
-                  : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              <div className="text-xs font-bold">{item.label}</div>
-              <div className="text-[11px] text-gray-500 mt-1 line-clamp-2">{item.desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* SECTION A: SYSTEM OVERVIEW */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <MetricCard title="Monitored Services" value={totalServices} demo={false} />
-        <MetricCard
-          title="Telemetry Health"
-          value={`${completeCount}/${totalServices}`}
-          unit={incompleteCount > 0 ? `(${incompleteCount} degraded)` : "100% complete"}
-          demo={false}
-        />
-        <MetricCard title="Total Ready Replicas" value={totalReplicas} demo={false} />
-        <MetricCard
-          title="Proposed Scale-Up"
-          value={scaleUpCount}
-          unit="services"
-          demo={false}
-        />
-        <MetricCard
-          title="Proposed Scale-Down"
-          value={scaleDownCount}
-          unit="services"
-          demo={false}
-        />
-        <MetricCard
-          title="Hold Decisions"
-          value={holdCount}
-          unit="services"
-          demo={false}
-        />
-      </div>
-
-      {/* SECTION C & D: BOTTLENECK & ACTUATOR DRY-RUN SUMMARY CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Bottleneck Detection Card */}
-        <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Bottleneck Prioritization
-              </span>
-              <Activity className="h-4 w-4 text-purple-600" />
+      ),
+      align: "center",
+      width: "100px",
+    },
+    {
+      key: "ready_replicas",
+      header: "Replicas (Ready/Des)",
+      render: (s) => (
+        <span className="font-mono text-cyan-400 font-bold">
+          {s.ready_replicas} / {s.desired_replicas ?? s.ready_replicas}
+        </span>
+      ),
+      align: "center",
+      width: "130px",
+    },
+    {
+      key: "cpu_utilisation",
+      header: "CPU Utilization",
+      render: (s) => {
+        const pct = (s.cpu_utilisation * 100).toFixed(1);
+        const isHigh = s.cpu_utilisation >= 0.7;
+        return (
+          <div className="flex items-center space-x-2 font-mono">
+            <div className="w-16 bg-canvas-dark rounded-full h-1.5 overflow-hidden border border-canvas-border">
+              <div
+                className={`h-full rounded-full ${isHigh ? "bg-rose-500" : "bg-cyan-400"}`}
+                style={{ width: `${Math.min(100, s.cpu_utilisation * 100)}%` }}
+              />
             </div>
-            <div className="mt-3 flex items-baseline space-x-2">
-              <span className={`text-xl font-bold ${bottleneckService ? "text-red-600" : "text-green-600"}`}>
-                {bottleneckService ? bottleneckService.toUpperCase() : "NO BOTTLENECK DETECTED"}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              {bottleneckService
-                ? `Downstream dependency '${bottleneckService}' exhibits high latency or errors; upstream services are held to prevent cascade.`
-                : "All microservices operate within configured latency target (200ms) and error threshold (5%)."}
-            </p>
-          </div>
-          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-            <span>Dependency graph: 10 Online Boutique services</span>
-            <span>Policy: Bottleneck-Prioritized</span>
-          </div>
-        </div>
-
-        {/* Kubernetes Actuator Status Card */}
-        <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Kubernetes Actuator Status
-              </span>
-              <Server className="h-4 w-4 text-blue-600" />
-            </div>
-            <div className="mt-3 flex items-center space-x-2">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                DRY-RUN MODE
-              </span>
-              <span className="text-xs text-gray-500">
-                {pipelineData?.services.filter((s) => s.actuator_execution_status === "VALIDATED").length} validated,{" "}
-                {pipelineData?.services.filter((s) => s.actuator_execution_status === "SKIPPED").length} skipped,{" "}
-                {pipelineData?.services.filter((s) => s.actuator_execution_status === "REJECTED").length} rejected
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Every decision undergoes safety invariant checking: replica limits [1, 10], max delta (2),
-              concurrency validation, rollout checks, and HPA conflict prevention.
-            </p>
-          </div>
-          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-            <span>Namespace: online-boutique</span>
-            <span className="text-green-600 font-semibold flex items-center space-x-1">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>Zero Cluster Modifications</span>
+            <span className={isHigh ? "text-rose-400 font-bold" : "text-text-primary"}>
+              {pct}%
             </span>
           </div>
+        );
+      },
+      align: "left",
+      width: "150px",
+    },
+    {
+      key: "memory_utilisation",
+      header: "Memory Utilization",
+      render: (s) => {
+        const pct = (s.memory_utilisation * 100).toFixed(1);
+        return (
+          <div className="flex items-center space-x-2 font-mono">
+            <div className="w-16 bg-canvas-dark rounded-full h-1.5 overflow-hidden border border-canvas-border">
+              <div
+                className="h-full rounded-full bg-blue-400"
+                style={{ width: `${Math.min(100, s.memory_utilisation * 100)}%` }}
+              />
+            </div>
+            <span className="text-text-primary">{pct}%</span>
+          </div>
+        );
+      },
+      align: "left",
+      width: "150px",
+    },
+    {
+      key: "request_rate",
+      header: "Throughput",
+      render: (s) => (
+        <span className="font-mono text-text-primary font-bold">
+          {s.request_rate.toFixed(1)}{" "}
+          <span className="text-text-muted text-[10px] font-normal">req/s</span>
+        </span>
+      ),
+      align: "right",
+      width: "120px",
+    },
+    {
+      key: "p95_latency",
+      header: "P95 Latency",
+      render: (s) => {
+        const isViolated = s.p95_latency > 200;
+        return (
+          <span className={`font-mono font-bold ${isViolated ? "text-rose-400" : "text-text-primary"}`}>
+            {s.p95_latency.toFixed(1)}{" "}
+            <span className="text-text-muted text-[10px] font-normal">ms</span>
+          </span>
+        );
+      },
+      align: "right",
+      width: "120px",
+    },
+    {
+      key: "error_rate",
+      header: "Error Rate",
+      render: (s) => (
+        <span className="font-mono text-text-muted">
+          {(s.error_rate * 100).toFixed(2)}%
+        </span>
+      ),
+      align: "right",
+      width: "100px",
+    },
+  ];
+
+  if (loading) return <LoadingState message="Aggregating live microservices telemetry..." />;
+  if (error && services.length === 0) return <ErrorState message={error} onRetry={() => loadData(true)} />;
+
+  return (
+    <div className="space-y-6">
+      {/* Page Header */}
+      <PageHeader
+        title="Executive Overview & Cluster Telemetry"
+        subtitle="Real-time Prometheus telemetry, bottleneck prioritization scores, and autonomous scaling decisions across the Online Boutique microservices application."
+        badge={
+          <StatusBadge
+            status={`PHASE: ${selectedPhase}`}
+            variant="purple"
+            pulse
+          />
+        }
+        actions={
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleManualEvaluation}
+              disabled={evaluating}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-colors disabled:opacity-50"
+            >
+              <Zap size={14} className={evaluating ? "animate-pulse" : ""} />
+              <span>{evaluating ? "Evaluating..." : "Trigger Decision Cycle"}</span>
+            </button>
+            <button
+              onClick={() => loadData(true)}
+              disabled={refreshing}
+              className="p-1.5 rounded-lg border border-canvas-border bg-canvas-card hover:bg-canvas-hover text-text-secondary hover:text-text-primary disabled:opacity-50 transition-colors"
+              title={`Last refreshed: ${lastRefreshed}`}
+            >
+              <RefreshCw size={14} className={refreshing ? "animate-spin text-cyan-400" : ""} />
+            </button>
+          </div>
+        }
+      />
+
+      {/* Safety Notice & Actuator Invariant Banner */}
+      <div className="bg-canvas-card border-l-4 border-l-amber-500 border border-canvas-border p-4 rounded-xl shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-start sm:items-center space-x-3">
+          <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 flex-shrink-0">
+            <ShieldCheck size={20} />
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-text-primary flex items-center space-x-2">
+              <span>Operating Posture: DRY-RUN Mode Active</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-bold">
+                SCALING_ENABLED=false
+              </span>
+            </div>
+            <p className="text-[11px] text-text-secondary mt-0.5 leading-relaxed">
+              All scaling recommendations are algorithmic dry-runs verified against safety invariants. Kubernetes cluster mutations remain completely inhibited.
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/scaling"
+          className="flex items-center space-x-1 text-xs text-amber-400 hover:text-amber-300 font-medium whitespace-nowrap self-end sm:self-center"
+        >
+          <span>Actuator Audit Log</span>
+          <ExternalLink size={12} />
+        </Link>
+      </div>
+
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
+        <MetricCard
+          title="Microservices"
+          value={totalServicesCount}
+          unit="active"
+          variant="cyan"
+          icon={Boxes}
+          subtext="Online Boutique"
+          to="/services"
+        />
+        <MetricCard
+          title="Healthy Services"
+          value={`${healthyServicesCount}/${totalServicesCount}`}
+          variant={healthyServicesCount === totalServicesCount ? "emerald" : "amber"}
+          icon={CheckCircle2}
+          subtext="Telemetry responsive"
+          to="/services"
+        />
+        <MetricCard
+          title="Active Bottleneck"
+          value={bottleneckService || "None"}
+          variant={bottleneckService ? "rose" : "emerald"}
+          icon={Flame}
+          subtext={bottleneckService ? "Prioritized for scale-up" : "All services nominal"}
+          to="/bottlenecks"
+        />
+        <MetricCard
+          title="Total Throughput"
+          value={totalThroughput.toFixed(1)}
+          unit="req/s"
+          variant="cyan"
+          icon={Activity}
+          subtext="Aggregated rate"
+          to="/services"
+        />
+        <MetricCard
+          title="Cluster P95 Latency"
+          value={averageLatency.toFixed(1)}
+          unit="ms"
+          variant={averageLatency > 200 ? "rose" : "blue"}
+          icon={Zap}
+          subtext="SLA Boundary: \u2264200ms"
+          to="/services"
+        />
+        <MetricCard
+          title="DPBPS Decisions"
+          value={`${pipeline?.scale_up_count ?? 0} Up / ${pipeline?.hold_count ?? 0} Hold`}
+          variant="purple"
+          icon={Brain}
+          subtext={`${pipeline?.scale_down_count ?? 0} Scale-Down`}
+          to="/intelligence"
+        />
+      </div>
+
+      {/* Performance Monitoring Section */}
+      <div className="bg-canvas-card border border-canvas-border rounded-xl p-5 shadow-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-canvas-border">
+          <SectionHeader
+            title="Live Performance Stream"
+            subtitle="Real-time multi-cycle metrics collected from Prometheus and Kubernetes Metrics Server"
+            icon={Activity}
+            className="border-b-0 mb-0 py-0"
+          />
+
+          {/* Metric Selector Tabs */}
+          <div className="flex items-center space-x-1.5 p-1 rounded-lg bg-canvas-dark border border-canvas-border text-xs self-start sm:self-auto font-medium">
+            <button
+              onClick={() => setChartMetric("throughput")}
+              className={`px-3 py-1 rounded-md transition-colors ${
+                chartMetric === "throughput"
+                  ? "bg-cyan-500/20 text-cyan-400 font-semibold shadow-sm"
+                  : "text-text-muted hover:text-text-primary"
+              }`}
+            >
+              Throughput (req/s)
+            </button>
+            <button
+              onClick={() => setChartMetric("latency")}
+              className={`px-3 py-1 rounded-md transition-colors ${
+                chartMetric === "latency"
+                  ? "bg-blue-500/20 text-blue-400 font-semibold shadow-sm"
+                  : "text-text-muted hover:text-text-primary"
+              }`}
+            >
+              P95 Latency (ms)
+            </button>
+            <button
+              onClick={() => setChartMetric("cpu")}
+              className={`px-3 py-1 rounded-md transition-colors ${
+                chartMetric === "cpu"
+                  ? "bg-purple-500/20 text-purple-400 font-semibold shadow-sm"
+                  : "text-text-muted hover:text-text-primary"
+              }`}
+            >
+              CPU & Memory (%)
+            </button>
+          </div>
+        </div>
+
+        {/* Chart Canvas */}
+        <div className="h-64 w-full">
+          {history.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-xs text-text-muted italic">
+              Collecting initial telemetry stream samples...
+            </div>
+          ) : chartMetric === "cpu" ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={services} margin={{ top: 10, right: 10, left: -20, bottom: 25 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f293d" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  stroke="#6b7280"
+                  fontSize={10}
+                  tickLine={false}
+                  angle={-25}
+                  textAnchor="end"
+                  interval={0}
+                />
+                <YAxis stroke="#6b7280" fontSize={10} unit="%" domain={[0, 100]} />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload as ServiceInfo;
+                      return (
+                        <div className="bg-canvas-card border border-canvas-border rounded-lg p-2.5 shadow-xl text-xs font-mono">
+                          <p className="font-sans font-bold text-text-primary mb-1">{data.name}</p>
+                          <p className="text-cyan-400">CPU: {(data.cpu_utilisation * 100).toFixed(1)}%</p>
+                          <p className="text-blue-400">Memory: {(data.memory_utilisation * 100).toFixed(1)}%</p>
+                          <p className="text-text-muted text-[10px] mt-1">Replicas: {data.ready_replicas}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey={(s: ServiceInfo) => parseFloat((s.cpu_utilisation * 100).toFixed(1))} name="CPU %" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={(s: ServiceInfo) => parseFloat((s.memory_utilisation * 100).toFixed(1))} name="Memory %" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <ReferenceLine y={70} stroke="#f59e0b" strokeDasharray="3 3" label={{ value: "CPU Trigger (70%)", fill: "#f59e0b", fontSize: 10 }} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="streamGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor={chartMetric === "throughput" ? "#06b6d4" : "#3b82f6"}
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={chartMetric === "throughput" ? "#06b6d4" : "#3b82f6"}
+                      stopOpacity={0.0}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f293d" vertical={false} />
+                <XAxis dataKey="time" stroke="#6b7280" fontSize={10} tickLine={false} />
+                <YAxis
+                  stroke="#6b7280"
+                  fontSize={10}
+                  unit={chartMetric === "throughput" ? " r/s" : " ms"}
+                />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-canvas-card border border-canvas-border rounded-lg p-2.5 shadow-xl text-xs font-mono">
+                          <p className="text-text-muted text-[10px] mb-1 font-sans">{label}</p>
+                          <p className={chartMetric === "throughput" ? "text-cyan-400 font-bold" : "text-blue-400 font-bold"}>
+                            {chartMetric === "throughput"
+                              ? `Total Throughput: ${payload[0].value} req/s`
+                              : `Average P95 Latency: ${payload[0].value} ms`}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey={chartMetric === "throughput" ? "throughput" : "avgLatency"}
+                  stroke={chartMetric === "throughput" ? "#06b6d4" : "#3b82f6"}
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#streamGrad)"
+                />
+                {chartMetric === "latency" && (
+                  <ReferenceLine
+                    y={200}
+                    stroke="#ef4444"
+                    strokeDasharray="4 2"
+                    label={{ value: "SLA (200ms)", fill: "#ef4444", fontSize: 10 }}
+                  />
+                )}
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
-      {/* SECTION B & C: SERVICE & DECISION MONITORING TABLE */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
-              Microservices Real-Time Telemetry & DPBPS Scaling Decisions
-            </h3>
-            <p className="text-xs text-gray-500">
-              Integrated from Prometheus, Kubernetes Metrics Server, and DPBPS Controller in DRY-RUN mode.
-            </p>
-          </div>
-          <span className="text-xs font-medium text-gray-500">
-            Showing {pipelineData?.services.length ?? 0} deployments
-          </span>
+      {/* Microservice Health Overview Table */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <SectionHeader
+            title="Online Boutique Microservices Health & Status"
+            subtitle="Click any row to inspect deep service telemetry and call dependencies"
+            icon={Boxes}
+            className="border-b-0 mb-0 py-0"
+          />
+          <Link
+            to="/services"
+            className="text-xs text-cyan-400 hover:text-cyan-300 font-medium flex items-center space-x-1"
+          >
+            <span>Full Inventory View</span>
+            <ExternalLink size={12} />
+          </Link>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-xs">
-            <thead className="bg-gray-50 text-gray-600 font-semibold uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-left">Service</th>
-                <th scope="col" className="px-3 py-3 text-right">Request Rate</th>
-                <th scope="col" className="px-3 py-3 text-right">P95 Latency</th>
-                <th scope="col" className="px-3 py-3 text-right">Error Rate</th>
-                <th scope="col" className="px-3 py-3 text-right">CPU Util.</th>
-                <th scope="col" className="px-3 py-3 text-right">Mem Util.</th>
-                <th scope="col" className="px-3 py-3 text-center">Replicas (Cur / Ready)</th>
-                <th scope="col" className="px-3 py-3 text-center">DPBPS Action</th>
-                <th scope="col" className="px-3 py-3 text-center">Proposed Reps</th>
-                <th scope="col" className="px-3 py-3 text-center">Actuator Status</th>
-                <th scope="col" className="px-4 py-3 text-left">Reason</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {pipelineData?.services.map((svc: PipelineServiceResult) => {
-                const isScaleUp = svc.dpbps_decision === "SCALE_UP";
-                const isScaleDown = svc.dpbps_decision === "SCALE_DOWN";
-                const isHold = svc.dpbps_decision === "HOLD";
+        <DataTable
+          data={services}
+          columns={serviceColumns}
+          keyExtractor={(s) => s.id}
+          onRowClick={() => navigate("/services")}
+          searchPlaceholder="Search services by name..."
+        />
+      </div>
 
-                return (
-                  <tr key={svc.service_name} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900">
-                      <div className="flex items-center space-x-1.5">
-                        <span>{svc.service_name}</span>
-                        {!svc.telemetry_complete && (
-                          <span
-                            title={`Missing metrics: ${svc.missing_metrics.join(", ")}`}
-                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700"
-                          >
-                            Incomplete
-                          </span>
-                        )}
-                        {svc.service_name === bottleneckService && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-700">
-                            Bottleneck
-                          </span>
-                        )}
-                      </div>
-                      {svc.dependencies.length > 0 && (
-                        <div className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[160px]" title={`Depends on: ${svc.dependencies.join(", ")}`}>
-                          Deps: {svc.dependencies.join(", ")}
-                        </div>
-                      )}
-                    </td>
+      {/* Bottom Grid: Deployment Phase Controls & Infrastructure Health */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Deployment Phase Controller */}
+        <div className="lg:col-span-2 bg-canvas-card border border-canvas-border rounded-xl p-5 shadow-card space-y-4">
+          <SectionHeader
+            title="CI/CD Deployment Phase Controller"
+            subtitle="Modulates DPBPS elasticity weights according to the active deployment stage"
+            icon={Layers}
+          />
 
-                    {/* Request Rate */}
-                    <td className="px-3 py-3 whitespace-nowrap text-right font-mono">
-                      {svc.request_rate !== null && svc.request_rate !== undefined ? `${svc.request_rate.toFixed(1)} req/s` : "—"}
-                    </td>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {DEPLOYMENT_PHASES.map((p) => {
+              const isSelected = selectedPhase === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => handlePhaseChange(p.id)}
+                  className={`p-3.5 rounded-xl border text-left transition-all ${
+                    isSelected
+                      ? "bg-purple-500/10 border-purple-500/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+                      : "bg-canvas-dark border-canvas-border hover:bg-canvas-hover"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-semibold text-xs text-text-primary">{p.label}</span>
+                    {isSelected ? (
+                      <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                    ) : (
+                      <Radio size={13} className="text-text-muted" />
+                    )}
+                  </div>
+                  <p className="text-[11px] text-text-secondary leading-tight">{p.desc}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-                    {/* P95 Latency */}
-                    <td className="px-3 py-3 whitespace-nowrap text-right font-mono">
-                      {svc.p95_latency !== null && svc.p95_latency !== undefined ? `${svc.p95_latency.toFixed(1)} ms` : "—"}
-                    </td>
+        {/* Infrastructure Health Status */}
+        <div className="bg-canvas-card border border-canvas-border rounded-xl p-5 shadow-card space-y-3 text-xs">
+          <SectionHeader
+            title="Infrastructure Components"
+            subtitle="Verified connectivity to control plane systems"
+            icon={Server}
+          />
 
-                    {/* Error Rate */}
-                    <td className="px-3 py-3 whitespace-nowrap text-right font-mono">
-                      {svc.error_rate !== null && svc.error_rate !== undefined ? `${(svc.error_rate * 100).toFixed(2)}%` : "—"}
-                    </td>
+          <div className="space-y-2.5 pt-1 font-mono">
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-canvas-dark border border-canvas-border">
+              <span className="text-text-secondary font-sans text-xs">FastAPI Backend</span>
+              <StatusBadge status={health?.status === "ok" ? "CONNECTED" : "DISCONNECTED"} size="xs" />
+            </div>
 
-                    {/* CPU Utilization */}
-                    <td className="px-3 py-3 whitespace-nowrap text-right font-mono">
-                      {svc.cpu_utilization !== null && svc.cpu_utilization !== undefined ? (
-                        <span className={svc.cpu_utilization > 0.8 ? "text-red-600 font-bold" : "text-gray-700"}>
-                          {(svc.cpu_utilization * 100).toFixed(1)}%
-                        </span>
-                      ) : "—"}
-                    </td>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-canvas-dark border border-canvas-border">
+              <span className="text-text-secondary font-sans text-xs">Kubernetes API (Docker Desktop)</span>
+              <StatusBadge status={health?.kubernetes_connected ? "CONNECTED" : "DISCONNECTED"} size="xs" />
+            </div>
 
-                    {/* Memory Utilization */}
-                    <td className="px-3 py-3 whitespace-nowrap text-right font-mono">
-                      {svc.memory_utilization !== null && svc.memory_utilization !== undefined ? (
-                        <span className={svc.memory_utilization > 0.8 ? "text-amber-600 font-bold" : "text-gray-700"}>
-                          {(svc.memory_utilization * 100).toFixed(1)}%
-                        </span>
-                      ) : "—"}
-                    </td>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-canvas-dark border border-canvas-border">
+              <span className="text-text-secondary font-sans text-xs">Prometheus Server</span>
+              <StatusBadge status={health?.prometheus_connected ? "READY" : "NO_DATA"} size="xs" />
+            </div>
 
-                    {/* Replicas (Current / Ready) */}
-                    <td className="px-3 py-3 whitespace-nowrap text-center font-mono">
-                      <span className="font-semibold text-gray-800">{svc.current_replicas}</span>
-                      <span className="text-gray-400"> / </span>
-                      <span className={svc.ready_replicas === svc.current_replicas ? "text-green-600 font-semibold" : "text-amber-600 font-bold"}>
-                        {svc.ready_replicas}
-                      </span>
-                    </td>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-canvas-dark border border-canvas-border">
+              <span className="text-text-secondary font-sans text-xs">OpenTelemetry Collector</span>
+              <StatusBadge status="ACTIVE" label="DAEMONSET" variant="cyan" size="xs" />
+            </div>
 
-                    {/* DPBPS Action */}
-                    <td className="px-3 py-3 whitespace-nowrap text-center">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
-                          isScaleUp
-                            ? "bg-green-100 text-green-800"
-                            : isScaleDown
-                            ? "bg-blue-100 text-blue-800"
-                            : isHold
-                            ? "bg-gray-100 text-gray-700"
-                            : "bg-red-50 text-red-600"
-                        }`}
-                      >
-                        {isScaleUp && <ArrowUpRight className="h-3 w-3 mr-0.5 text-green-700" />}
-                        {isScaleDown && <ArrowDownRight className="h-3 w-3 mr-0.5 text-blue-700" />}
-                        {svc.dpbps_decision}
-                      </span>
-                    </td>
-
-                    {/* Proposed Replicas */}
-                    <td className="px-3 py-3 whitespace-nowrap text-center font-mono">
-                      <span className="font-bold text-gray-900">{svc.proposed_replica_count}</span>
-                    </td>
-
-                    {/* Actuator Status */}
-                    <td className="px-3 py-3 whitespace-nowrap text-center">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                          svc.actuator_execution_status === "VALIDATED"
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                            : svc.actuator_execution_status === "REJECTED"
-                            ? "bg-red-100 text-red-800 border border-red-200"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {svc.actuator_execution_status}
-                      </span>
-                    </td>
-
-                    {/* Decision Reason */}
-                    <td className="px-4 py-3 text-gray-600 max-w-xs truncate" title={svc.reason}>
-                      {svc.reason}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-canvas-dark border border-canvas-border">
+              <span className="text-text-secondary font-sans text-xs">Scaling Actuator</span>
+              <StatusBadge status="DRY_RUN" label="DRY_RUN" variant="amber" size="xs" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

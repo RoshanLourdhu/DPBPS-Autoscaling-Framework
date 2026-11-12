@@ -17,7 +17,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Header, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 import backend.config as cfg
@@ -28,6 +28,7 @@ from backend.scaling.kubernetes.actuator import (
     KubernetesScalingResult,
     ScalingExecutionStatus,
 )
+from backend.scaling.kubernetes.client import get_apps_v1_api
 from backend.scaling.kubernetes.telemetry_adapter import (
     KubernetesTelemetryAdapter,
 )
@@ -37,6 +38,12 @@ from backend.scaling.models import (
     DeploymentPhase,
     ScalingConfig as ScalingConfigModel,
     TelemetryInput,
+)
+from backend.scaling.continuous_controller import (
+    ContinuousDPBPSController,
+    ContinuousControllerStatus,
+    ContinuousCycleSummary,
+    ContinuousDecisionRecord,
 )
 from backend.workload.models import (
     WorkloadProfileConfig,
@@ -74,8 +81,19 @@ router = APIRouter()
 # Use a unified DeploymentStateManager so the DPBPS controller,
 # the telemetry adapter, and the actuator share identical phase & cooldown state.
 
-shared_state_manager = DeploymentStateManager()
-dpbps_controller = DPBPSController()
+shared_state_manager = DeploymentStateManager(auto_load=True)
+dpbps_controller = DPBPSController(
+    config=ScalingConfigModel(
+        min_replicas=1,
+        max_replicas=3,
+        max_replica_change=1,
+        cooldown_sec=60,
+        scale_down_stabilization_sec=60,
+        cpu_threshold=0.75,
+        memory_threshold=0.80,
+        latency_target_ms=150.0,
+    )
+)
 dpbps_controller.state_manager = shared_state_manager
 experiment_manager = ExperimentManager()
 experiment_executor = ExperimentExecutor(manager=experiment_manager)
@@ -106,20 +124,48 @@ def get_kubernetes_actuator() -> KubernetesScalingActuator:
             state_manager=shared_state_manager,
             config=dpbps_controller.config,
             dry_run=True,  # STRICT DRY-RUN DEFAULT
+            allowlist=cfg.SCALING_ALLOWLIST,  # Restricted to productcatalogservice
         )
     return _shared_actuator
 
 
 def set_telemetry_adapter(adapter: KubernetesTelemetryAdapter) -> None:
     """Override telemetry adapter (primarily for testing)."""
-    global _shared_adapter
+    global _shared_adapter, _shared_continuous_controller
     _shared_adapter = adapter
+    if _shared_continuous_controller:
+        _shared_continuous_controller.telemetry_adapter = adapter
 
 
 def set_kubernetes_actuator(actuator: KubernetesScalingActuator) -> None:
     """Override actuator (primarily for testing)."""
-    global _shared_actuator
+    global _shared_actuator, _shared_continuous_controller
     _shared_actuator = actuator
+    if _shared_continuous_controller:
+        _shared_continuous_controller.actuator = actuator
+
+
+_shared_continuous_controller: Optional[ContinuousDPBPSController] = None
+
+
+def get_continuous_controller() -> ContinuousDPBPSController:
+    """Retrieve or initialize the singleton ContinuousDPBPSController."""
+    global _shared_continuous_controller
+    if _shared_continuous_controller is None:
+        _shared_continuous_controller = ContinuousDPBPSController(
+            dpbps_controller=dpbps_controller,
+            telemetry_adapter=get_telemetry_adapter(),
+            actuator=get_kubernetes_actuator(),
+            state_manager=shared_state_manager,
+            interval_seconds=15.0,
+        )
+    return _shared_continuous_controller
+
+
+def set_continuous_controller(controller: ContinuousDPBPSController) -> None:
+    """Override continuous controller (primarily for testing)."""
+    global _shared_continuous_controller
+    _shared_continuous_controller = controller
 
 
 # ---------------------------------------------------------------------
@@ -134,6 +180,7 @@ class HealthResponse(BaseModel):
     prometheus_connected: bool = True
     dry_run: bool = True
     scaling_enabled: bool = False
+    emergency_stop: bool = False
     deployment_phase: str = "NORMAL_OPERATION"
 
 
@@ -152,8 +199,8 @@ async def health_check():
     except Exception:
         prom_ok = False
 
+    actuator = get_kubernetes_actuator()
     try:
-        actuator = get_kubernetes_actuator()
         if actuator.apps_api:
             # Simple check
             k8s_ok = True
@@ -166,8 +213,9 @@ async def health_check():
         version="0.1.0",
         kubernetes_connected=k8s_ok,
         prometheus_connected=prom_ok,
-        dry_run=True,
+        dry_run=actuator.dry_run,
         scaling_enabled=cfg.SCALING_ENABLED,
+        emergency_stop=actuator.is_emergency_stop_active(),
         deployment_phase=shared_state_manager.get_phase().value,
     )
 
@@ -686,6 +734,8 @@ router.include_router(simulation_router, prefix="/simulation", tags=["simulation
 async def get_scaling_status():
     """Return controller configuration, phase, dry-run mode, and latest decision."""
     latest = dpbps_controller.decision_history[-1].dict() if dpbps_controller.decision_history else None
+    cont = get_continuous_controller()
+    cont_status = cont.get_status()
     return {
         "simulation_mode": True,
         "dry_run": True,
@@ -693,6 +743,15 @@ async def get_scaling_status():
         "phase": dpbps_controller.get_phase().value,
         "config": dpbps_controller.config.dict(),
         "latest_decision": latest,
+        "controller_running": cont.is_running,
+        "controller_paused": cont.is_paused,
+        "interval_seconds": cont.interval_seconds,
+        "cycle_count": cont.cycle_count,
+        "last_evaluation_time": cont_status.last_evaluation_time,
+        "last_evaluation_duration_ms": cont_status.last_evaluation_duration_ms,
+        "next_evaluation_time": cont_status.next_evaluation_time,
+        "current_bottleneck": cont_status.current_bottleneck,
+        "total_decisions_recorded": cont_status.total_decisions_recorded,
     }
 
 
@@ -738,13 +797,17 @@ async def dry_run_scaling(telemetry: List[TelemetryInput]):
 
 class DeploymentPhasePayload(BaseModel):
     phase: DeploymentPhase
+    service_name: Optional[str] = None
 
 
 @router.post("/scaling/deployment-phase", tags=["scaling"])
 async def set_deployment_phase(payload: DeploymentPhasePayload):
-    """Update active deployment phase across DPBPS components."""
-    shared_state_manager.set_phase(payload.phase)
-    return {"phase": shared_state_manager.get_phase().value}
+    """Update active deployment phase globally or for a specific microservice."""
+    shared_state_manager.set_phase(payload.phase, service_name=payload.service_name)
+    return {
+        "phase": shared_state_manager.get_phase(payload.service_name).value,
+        "service_name": payload.service_name,
+    }
 
 
 @router.get("/scaling/actuator/history", tags=["scaling"])
@@ -799,128 +862,365 @@ class PipelineEvaluationResponse(BaseModel):
 async def run_pipeline_evaluation():
     """
     Execute the complete end-to-end DPBPS evaluation pipeline in DRY-RUN mode.
-
-    Pipeline Steps:
-    1. Collects live telemetry for all eligible microservices via KubernetesTelemetryAdapter.
-    2. Excludes services with incomplete, missing, or stale telemetry.
-    3. Passes validated TelemetryInput objects to DPBPSController.
-    4. Generates scaling decisions and detects bottleneck services.
-    5. Evaluates scaling decisions through KubernetesScalingActuator in DRY-RUN mode.
-    6. Returns a consolidated, structured per-service response.
+    Delegates to the shared ContinuousDPBPSController to maintain a single source
+    of truth for metrics, state, history, and actuator results.
     """
-    adapter = get_telemetry_adapter()
-    actuator = get_kubernetes_actuator()
-    now_str = datetime.now(timezone.utc).isoformat()
-    current_phase = shared_state_manager.get_phase().value
-
-    # 1. Ingest telemetry
+    cont = get_continuous_controller()
     try:
-        valid_inputs, excluded = adapter.get_telemetry_inputs()
+        summary = await cont.run_single_cycle()
     except Exception as exc:
-        logger.error("Failed to collect telemetry inputs in pipeline: %s", exc)
+        logger.error("Failed to run pipeline evaluation: %s", exc)
         raise HTTPException(status_code=500, detail=f"Telemetry collection failed: {exc}")
 
-    # 2. Evaluate decisions through DPBPS Controller
-    decisions = dpbps_controller.evaluate(valid_inputs)
+    # Synchronize actuator history
+    if hasattr(cont, "last_actuator_results") and cont.last_actuator_results:
+        _actuator_history.extend(cont.last_actuator_results)
+        while len(_actuator_history) > 100:
+            _actuator_history.pop(0)
 
-    # 3. Process through Actuator in Dry-Run mode
-    actuator_results = actuator.execute_decisions(decisions)
-
-    # Record in history buffer
-    _actuator_history.extend(actuator_results)
-    while len(_actuator_history) > 100:
-        _actuator_history.pop(0)
-
-    # Index decisions and actuator results
-    dec_map: Dict[str, DecisionOutput] = {d.service_name: d for d in decisions}
-    act_map: Dict[str, KubernetesScalingResult] = {r.service_name: r for r in actuator_results}
-
-    # Retrieve full raw telemetry for complete inventory
-    raw_telemetry = adapter.collect_deployment_telemetry()
-    service_results: List[PipelineServiceResult] = []
-
-    bottleneck_detected = None
-
-    for item in raw_telemetry:
-        svc_name = item["service_name"]
-
-        # Skip loadgenerator from microservice list
-        if svc_name == "loadgenerator":
-            continue
-
-        is_complete = item.get("telemetry_available", False)
-        desired_rep = item.get("desired_replicas", 0)
-        ready_rep = item.get("ready_replicas", 0)
-
-        if svc_name in dec_map:
-            decision = dec_map[svc_name]
-            act_res = act_map.get(svc_name)
-            if decision.bottleneck:
-                bottleneck_detected = decision.bottleneck
-
-            service_results.append(PipelineServiceResult(
-                service_name=svc_name,
-                request_rate=item.get("request_rate"),
-                p95_latency=item.get("p95_latency_ms"),
-                error_rate=item.get("error_rate"),
-                cpu_utilization=item.get("cpu_utilisation"),
-                memory_utilization=item.get("memory_utilisation"),
-                current_replicas=desired_rep,
-                ready_replicas=ready_rep,
-                deployment_phase=current_phase,
-                bottleneck_information=decision.bottleneck,
-                dpbps_decision=decision.action.value,
-                proposed_replica_count=decision.requested_replicas,
-                actuator_execution_status=act_res.status.value if act_res else "VALIDATED",
-                reason=decision.reason,
-                cluster_modified=False,
-                telemetry_complete=True,
-                missing_metrics=item.get("missing_metrics", []),
-                dependencies=item.get("dependencies", []),
-                timestamp=item.get("timestamp") or now_str,
-            ))
-        else:
-            # Excluded service
-            missing = item.get("missing_metrics", [])
-            reason_str = item.get("reason") or (f"Excluded: missing metrics {missing}" if missing else "Excluded: uninstrumented or inactive")
-
-            service_results.append(PipelineServiceResult(
-                service_name=svc_name,
-                request_rate=item.get("request_rate"),
-                p95_latency=item.get("p95_latency_ms"),
-                error_rate=item.get("error_rate"),
-                cpu_utilization=item.get("cpu_utilisation"),
-                memory_utilization=item.get("memory_utilisation"),
-                current_replicas=desired_rep,
-                ready_replicas=ready_rep,
-                deployment_phase=current_phase,
-                bottleneck_information=None,
-                dpbps_decision="EXCLUDED",
-                proposed_replica_count=desired_rep,
-                actuator_execution_status="SKIPPED",
-                reason=reason_str,
-                cluster_modified=False,
-                telemetry_complete=False,
-                missing_metrics=missing,
-                dependencies=item.get("dependencies", []),
-                timestamp=item.get("timestamp") or now_str,
-            ))
-
-    scale_up_count = sum(1 for d in decisions if d.action == DecisionAction.SCALE_UP)
-    scale_down_count = sum(1 for d in decisions if d.action == DecisionAction.SCALE_DOWN)
-    hold_count = sum(1 for d in decisions if d.action == DecisionAction.HOLD)
+    service_results = [
+        PipelineServiceResult(
+            service_name=d.service_name,
+            request_rate=d.request_rate,
+            p95_latency=d.p95_latency,
+            error_rate=d.error_rate,
+            cpu_utilization=d.cpu_utilization,
+            memory_utilization=d.memory_utilization,
+            current_replicas=d.previous_replicas,
+            ready_replicas=d.previous_replicas,
+            deployment_phase=d.deployment_phase,
+            bottleneck_information=d.bottleneck_service if (d.is_bottleneck or d.bottleneck_service) else None,
+            dpbps_decision=d.action,
+            proposed_replica_count=d.recommended_replicas,
+            actuator_execution_status=d.actuator_status,
+            reason=d.reason,
+            cluster_modified=False,
+            telemetry_complete=d.telemetry_complete,
+            missing_metrics=d.missing_metrics,
+            dependencies=d.dependencies,
+            timestamp=d.timestamp,
+        )
+        for d in summary.decisions
+    ]
 
     return PipelineEvaluationResponse(
-        timestamp=now_str,
-        deployment_phase=current_phase,
+        timestamp=summary.timestamp,
+        deployment_phase=summary.deployment_phase,
         execution_mode="DRY_RUN",
         cluster_modified=False,
-        total_services=len(service_results),
-        complete_telemetry_services=len(valid_inputs),
-        incomplete_telemetry_services=len(service_results) - len(valid_inputs),
-        bottleneck_service=bottleneck_detected,
-        scale_up_count=scale_up_count,
-        scale_down_count=scale_down_count,
-        hold_count=hold_count,
+        total_services=summary.total_services,
+        complete_telemetry_services=summary.eligible_services,
+        incomplete_telemetry_services=summary.excluded_services,
+        bottleneck_service=summary.bottleneck_service,
+        scale_up_count=summary.scale_up_count,
+        scale_down_count=summary.scale_down_count,
+        hold_count=summary.hold_count,
         services=service_results,
     )
+
+
+# ---------------------------------------------------------------------
+# CONTINUOUS DPBPS CONTROLLER ENDPOINTS
+# ---------------------------------------------------------------------
+
+class ControllerIntervalPayload(BaseModel):
+    interval_seconds: float = Field(..., ge=5.0, le=300.0, description="Evaluation interval in seconds (5-300)")
+
+
+@router.get("/dpbps/controller/status", response_model=ContinuousControllerStatus, tags=["controller"])
+async def get_controller_status():
+    """Retrieve runtime status and diagnostics of the continuous DPBPS controller."""
+    return get_continuous_controller().get_status()
+
+
+@router.post("/dpbps/controller/start", tags=["controller"])
+async def start_continuous_controller():
+    """Start the background continuous evaluation loop."""
+    cont = get_continuous_controller()
+    started = await cont.start()
+    return {
+        "status": "started" if started else "already_running",
+        "running": True,
+        "interval_seconds": cont.interval_seconds,
+    }
+
+
+@router.post("/dpbps/controller/stop", tags=["controller"])
+async def stop_continuous_controller():
+    """Stop the continuous evaluation loop gracefully."""
+    cont = get_continuous_controller()
+    stopped = await cont.stop()
+    return {
+        "status": "stopped" if stopped else "already_stopped",
+        "running": False,
+    }
+
+
+@router.post("/dpbps/controller/pause", tags=["controller"])
+async def pause_continuous_controller():
+    """Pause continuous evaluations."""
+    cont = get_continuous_controller()
+    paused = cont.pause()
+    return {
+        "status": "paused" if paused else "cannot_pause",
+        "paused": cont.is_paused,
+    }
+
+
+@router.post("/dpbps/controller/resume", tags=["controller"])
+async def resume_continuous_controller():
+    """Resume continuous evaluations."""
+    cont = get_continuous_controller()
+    resumed = cont.resume()
+    return {
+        "status": "resumed" if resumed else "cannot_resume",
+        "paused": cont.is_paused,
+    }
+
+
+@router.post("/dpbps/controller/interval", tags=["controller"])
+async def set_controller_interval(payload: ControllerIntervalPayload):
+    """Set the continuous evaluation interval in seconds."""
+    cont = get_continuous_controller()
+    updated = cont.set_interval(payload.interval_seconds)
+    return {"interval_seconds": updated}
+
+
+@router.post("/dpbps/controller/trigger", response_model=ContinuousCycleSummary, tags=["controller"])
+async def trigger_continuous_cycle():
+    """Trigger an immediate continuous evaluation cycle and return summary."""
+    cont = get_continuous_controller()
+    return await cont.run_single_cycle()
+
+
+@router.get("/dpbps/controller/history", response_model=List[ContinuousCycleSummary], tags=["controller"])
+async def get_controller_history(limit: int = Query(20, ge=1, le=100)):
+    """Retrieve recent continuous cycle summaries."""
+    cont = get_continuous_controller()
+    return cont.get_history(limit)
+
+
+@router.get("/dpbps/controller/decisions", response_model=List[ContinuousDecisionRecord], tags=["controller"])
+async def get_controller_decisions(
+    service_name: Optional[str] = Query(None, description="Optional service name filter"),
+    limit: int = Query(50, ge=1, le=200),
+):
+    """Retrieve detailed chronological per-service decisions."""
+    cont = get_continuous_controller()
+    return cont.get_detailed_decisions(service_name=service_name, limit=limit)
+
+
+# ---------------------------------------------------------------------
+# CI/CD DEPLOYMENT WEBHOOK & ROLLOUT RECONCILIATION ENDPOINTS
+# ---------------------------------------------------------------------
+
+class CicdWebhookPayload(BaseModel):
+    event_id: str = Field(..., description="Unique event identifier")
+    service_name: str = Field(..., description="Target microservice name")
+    event_type: str = Field(..., description="started, progressing, succeeded, failed, cancelled")
+    timestamp: Optional[str] = Field(None, description="ISO-8601 UTC timestamp")
+    commit_sha: Optional[str] = Field("", description="Git commit hash")
+    image_tag: Optional[str] = Field("", description="Container image tag")
+    pipeline_id: Optional[str] = Field("", description="CI/CD pipeline ID")
+    details: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Custom event metadata")
+
+
+@router.post("/cicd/events", tags=["cicd"])
+async def receive_cicd_event(
+    request: Request,
+    payload: CicdWebhookPayload,
+    x_hub_signature_256: Optional[str] = Header(None, alias="X-Hub-Signature-256"),
+    x_cicd_signature: Optional[str] = Header(None, alias="X-CICD-Signature"),
+):
+    """
+    Ingest CI/CD deployment lifecycle events.
+    Supports HMAC SHA-256 webhook signature validation and deduplication.
+    """
+    raw_body = await request.body()
+    sig_header = x_hub_signature_256 or x_cicd_signature
+
+    validate_sig = sig_header is not None
+    success, message, record = shared_state_manager.record_cicd_event(
+        payload.dict(),
+        raw_body=raw_body,
+        signature_header=sig_header,
+        validate_signature=validate_sig,
+    )
+
+    if not success:
+        if "signature" in message.lower():
+            raise HTTPException(status_code=401, detail=message)
+        if "duplicate" in message.lower():
+            return {"status": "ignored", "message": message, "event_id": payload.event_id}
+        raise HTTPException(status_code=400, detail=message)
+
+    return {"status": "accepted", "message": message, "event": record}
+
+
+@router.get("/cicd/events", tags=["cicd"])
+async def list_cicd_events(
+    service_name: Optional[str] = Query(None, description="Filter by service name"),
+    limit: int = Query(50, ge=1, le=100),
+):
+    """Retrieve ingested CI/CD event audit log ordered latest first."""
+    return shared_state_manager.get_cicd_events(limit=limit, service_name=service_name)
+
+
+@router.get("/deployments/rollout/status", tags=["deployment"])
+async def get_rollout_status():
+    """
+    Retrieve live Kubernetes rollout conditions, generations, and replicas for all deployments.
+    """
+    try:
+        adapter = get_telemetry_adapter()
+        raw_telemetry = adapter.collect_deployment_telemetry()
+        apps_api = get_apps_v1_api()
+
+        rollouts = []
+        for item in raw_telemetry:
+            svc = item.get("service_name")
+            if not svc:
+                continue
+            desired = item.get("desired_replicas", 0)
+            ready = item.get("ready_replicas", 0)
+            updated = item.get("updated_replicas", 0)
+            available = item.get("available_replicas", 0)
+            current_phase = shared_state_manager.get_phase(svc).value
+
+            gen = 1
+            obs_gen = 1
+            conditions = []
+            try:
+                dep = apps_api.read_namespaced_deployment(name=svc, namespace=cfg.KUBERNETES_NAMESPACE)
+                gen = getattr(dep.metadata, "generation", 1)
+                obs_gen = getattr(dep.status, "observed_generation", 1)
+                for cond in getattr(dep.status, "conditions", []) or []:
+                    conditions.append({
+                        "type": cond.type,
+                        "status": cond.status,
+                        "reason": cond.reason,
+                        "message": cond.message,
+                    })
+            except Exception:
+                pass
+
+            in_progress = (gen != obs_gen) or (updated < desired) or (ready < desired and desired > 0)
+
+            rollouts.append({
+                "service_name": svc,
+                "current_phase": current_phase,
+                "generation": gen,
+                "observed_generation": obs_gen,
+                "desired_replicas": desired,
+                "updated_replicas": updated,
+                "ready_replicas": ready,
+                "available_replicas": available,
+                "unavailable_replicas": max(0, desired - ready),
+                "rollout_in_progress": in_progress,
+                "conditions": conditions,
+                "timestamp": item.get("timestamp"),
+            })
+
+        return rollouts
+    except Exception as exc:
+        logger.error("Failed to query rollout status: %s", exc)
+        return []
+
+
+class ReconcileRequest(BaseModel):
+    service_name: Optional[str] = None
+
+
+@router.post("/deployments/reconcile", tags=["deployment"])
+async def reconcile_deployments(payload: Optional[ReconcileRequest] = None):
+    """
+    Reconcile stored deployment phase against live Kubernetes rollout status.
+    """
+    target_svc = payload.service_name if payload else None
+    results = []
+    apps_api = get_apps_v1_api()
+
+    services_to_reconcile = [target_svc] if target_svc else [
+        "frontend", "cartservice", "productcatalogservice", "currencyservice",
+        "paymentservice", "shippingservice", "emailservice", "checkoutservice",
+        "recommendationservice", "adservice"
+    ]
+
+    for svc in services_to_reconcile:
+        try:
+            dep = apps_api.read_namespaced_deployment(name=svc, namespace=cfg.KUBERNETES_NAMESPACE)
+            status = dep.status
+            metadata = dep.metadata
+            conds = []
+            for cond in getattr(status, "conditions", []) or []:
+                conds.append({
+                    "type": getattr(cond, "type", ""),
+                    "status": getattr(cond, "status", ""),
+                    "reason": getattr(cond, "reason", ""),
+                    "message": getattr(cond, "message", ""),
+                })
+            rollout_info = {
+                "generation": getattr(metadata, "generation", 0),
+                "observed_generation": getattr(status, "observed_generation", 0),
+                "desired_replicas": getattr(dep.spec, "replicas", 1) or 1,
+                "updated_replicas": getattr(status, "updated_replicas", 0) or 0,
+                "available_replicas": getattr(status, "available_replicas", 0) or 0,
+                "ready_replicas": getattr(status, "ready_replicas", 0) or 0,
+                "conditions": conds,
+            }
+            res = shared_state_manager.reconcile_kubernetes_rollout(svc, rollout_info, dpbps_controller.config)
+            results.append(res)
+        except Exception as exc:
+            logger.warning("Reconciliation failed for %s: %s", svc, exc)
+            results.append({
+                "service_name": svc,
+                "error": str(exc),
+                "action": "ERROR",
+            })
+
+    return results
+
+
+# ---------------------------------------------------------------------
+# ACTUATOR HARDENING & EMERGENCY STOP ENDPOINTS
+# ---------------------------------------------------------------------
+
+@router.get("/scaling/actuator/status", tags=["actuator"])
+async def get_actuator_status():
+    """Retrieve actuator health, emergency stop state, and active safety gates."""
+    actuator = get_kubernetes_actuator()
+    return actuator.get_actuator_status()
+
+
+class EmergencyStopPayload(BaseModel):
+    enabled: bool
+    reason: Optional[str] = "Manual emergency stop toggled via API"
+
+
+@router.post("/scaling/actuator/emergency-stop", tags=["actuator"])
+async def toggle_emergency_stop(payload: EmergencyStopPayload):
+    """Activate or deactivate the actuator global emergency stop switch."""
+    actuator = get_kubernetes_actuator()
+    if payload.enabled:
+        result = actuator.activate_emergency_stop(reason=payload.reason or "Manual emergency stop")
+    else:
+        result = actuator.deactivate_emergency_stop()
+    return result
+
+
+class RollbackPayload(BaseModel):
+    service_name: str
+    rollback_replicas: int = Field(..., ge=1, le=10)
+    reason: Optional[str] = "Manual rollback procedure requested"
+
+
+@router.post("/scaling/actuator/rollback", tags=["actuator"])
+async def trigger_actuator_rollback(payload: RollbackPayload):
+    """Execute or simulate a rollback to revert replicas for a deployment."""
+    actuator = get_kubernetes_actuator()
+    return actuator.execute_rollback_procedure(
+        service_name=payload.service_name,
+        rollback_replicas=payload.rollback_replicas,
+        reason=payload.reason or "Manual rollback requested",
+    )
+

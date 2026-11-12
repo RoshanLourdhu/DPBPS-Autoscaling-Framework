@@ -21,6 +21,10 @@ poetry.lock
 monitoring-values.yaml
 # Node
 node_modules/
+# Runtime state data
+backend/data/*.json
+!backend/data/.gitkeep
+
 # Build artifacts
 build/
 dist/

@@ -62,6 +62,9 @@ class DPBPSController:
         decisions: List[DecisionOutput] = []
 
         for t in telemetry:
+            # Respect per-service deployment phase
+            service_phase = self.state_manager.get_phase(t.service_name)
+
             # Basic validation – missing or stale telemetry leads to HOLD/INSUFFICIENT.
             if not is_fresh(t, self.config):
                 decision = DecisionOutput(
@@ -69,7 +72,7 @@ class DPBPSController:
                     action=DecisionAction.INSUFFICIENT_TELEMETRY,
                     previous_replicas=t.current_replicas,
                     requested_replicas=t.current_replicas,
-                    phase=self.state_manager.get_phase(),
+                    phase=service_phase,
                     bottleneck=bottleneck_service,
                     reason="Telemetry sample is stale or missing",
                 )
@@ -83,7 +86,7 @@ class DPBPSController:
                     action=DecisionAction.HOLD,
                     previous_replicas=t.current_replicas,
                     requested_replicas=t.current_replicas,
-                    phase=self.state_manager.get_phase(),
+                    phase=service_phase,
                     bottleneck=bottleneck_service,
                     reason="Cooldown period active",
                 )
@@ -111,12 +114,15 @@ class DPBPSController:
                 desired_change = -1
 
             # Respect deployment phase constraints.
-            phase = self.state_manager.get_phase()
+            phase = service_phase
             reason = ""
-            if phase == DeploymentPhase.ACTIVE_DEPLOYMENT and desired_change < 0:
-                # No scale‑down during active deployment.
+            if phase in (DeploymentPhase.ACTIVE_DEPLOYMENT, DeploymentPhase.PRE_DEPLOYMENT) and desired_change < 0:
+                # No scale‑down during pre-deployment or active deployment.
                 desired_change = 0
-                reason = "Active deployment – scale‑down suppressed"
+                if phase == DeploymentPhase.PRE_DEPLOYMENT:
+                    reason = "Pre-deployment – scale‑down suppressed"
+                else:
+                    reason = "Active deployment – scale‑down suppressed"
             elif phase == DeploymentPhase.POST_DEPLOYMENT and desired_change < 0:
                 # Require stabilization.
                 if self.state_manager.is_stabilized_for_scale_down(t.service_name, now, self.config):
