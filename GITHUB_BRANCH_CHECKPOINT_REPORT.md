@@ -19,9 +19,10 @@ The original `master` branch was preserved without alteration or fast-forwarding
 | **Protected Base Branch** | `master` |
 | **Base Commit SHA** | `bc41deccc7df370401f83a9206f8e9680071c047` *(Verified Unchanged)* |
 | **Target Checkpoint Branch** | `feature/dpbps-live-scaling-readiness` |
-| **Checkpoint Commit SHA** | `34e0de45467ab2e2efa3500f5e1db7aada9102af` |
+| **Feature Commit SHA** | `34e0de45467ab2e2efa3500f5e1db7aada9102af` |
+| **Final Head Commit SHA** | `7365908824d89d44807363b0e861d40e60c679de` |
 | **Tracking Configuration** | `origin/feature/dpbps-live-scaling-readiness` |
-| **Remote Alignment Verification** | Verified via `git ls-remote --heads origin` (Matching SHA) |
+| **Remote Alignment Verification** | Verified via `git ls-remote --heads origin` (`7365908824d89d44807363b0e861d40e60c679de`) |
 | **Pull Request URL** | [Create PR on GitHub](https://github.com/RoshanLourdhu/DPBPS-Autoscaling-Framework/pull/new/feature/dpbps-live-scaling-readiness) |
 
 ---
